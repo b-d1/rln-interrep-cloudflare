@@ -1,0 +1,75 @@
+import axios from 'axios';
+import express from "express";
+
+
+const APP_PORT = 8082
+const APP_BASE_URL = `http://localhost:${APP_PORT}`
+
+const APP_NAME = 'EXAMPLE_APP'
+
+const RATE_LIMIT_SERVER_BASE_URL = 'http://localhost:8080'
+const RATE_LIMIT_SERVER_HOST = new URL(RATE_LIMIT_SERVER_BASE_URL).host;
+
+const init = async () => {
+
+// init express
+const app = express();
+app.use(express.json())
+
+// Check origin
+// (this is for demo purposes only, proper authentication to be implemented)
+app.use((req, res, next) => {
+
+    if(req.header.host === RATE_LIMIT_SERVER_HOST) next();
+    else res.status(400).json({"error": "Access not allowed"});
+})
+
+
+app.get("/", (req, res) => {
+    res.send(`Welcome to ${APP_NAME}!`);
+});
+
+app.get("/hello", (req, res) => {
+    res.send({"message": `Hello from ${APP_NAME}!`})
+});
+
+// start the Express server
+app.listen(APP_PORT, () => {
+    console.log(`EXAMPLE APP server started at http://localhost:${APP_PORT}`);
+});
+
+};
+
+
+const reigster = async (): Promise<boolean> => {
+    console.log("registering ....")
+    let result = await axios.get(`${RATE_LIMIT_SERVER_BASE_URL}/apps/${APP_NAME}`);
+    console.log("result", result.data.name)
+    if(result.data.name && result.data.name === APP_NAME) {
+        return true
+    } else {
+        console.log("app doesn't exists");
+        const appBody = {
+            'url': APP_BASE_URL,
+            'name': APP_NAME
+        }
+
+        result = await axios.post(`${RATE_LIMIT_SERVER_BASE_URL}/apps/register`, appBody);
+
+        console.log("app register result", result.data.name);
+
+        if(result.data.name === APP_NAME) return true;
+        return false;
+
+    }
+
+};
+
+
+reigster().then(res => {
+    if(!res) {
+        console.log("Invalid registration");
+        return;
+    }
+    init();
+})
