@@ -4,7 +4,6 @@ import {
   isSpamRequest,
   getSharesForEpochForUser,
 } from "./RequestStats.statics";
-import AppSchema from "../App/App.schema";
 import {
   IRequestStats,
   IRequestStatsModel,
@@ -12,24 +11,11 @@ import {
 } from "./RequestStats.types";
 
 const RequestStatsSchemaField: Record<keyof IRequestStats, any> = {
-  app: AppSchema,
-  epochs: [
-    {
-      epoch: String,
-      nullifierStats: [
-        {
-          nullifier: String,
-          numRequests: Number,
-          shares: [
-            {
-              xShare: String,
-              yShare: String,
-            },
-          ],
-        },
-      ],
-    },
-  ],
+  appHost: String,
+  nullifier: String,
+  epoch: String,
+  xShare: String,
+  yShare: String,
 };
 
 const RequestStatsSchema = new Schema<

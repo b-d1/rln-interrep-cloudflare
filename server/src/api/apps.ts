@@ -47,10 +47,7 @@ router.post("/register", async (req, res) => {
 
     await requestStats.save();
 
-    res.json({
-      app,
-      requestStats,
-    });
+    res.json(app);
   }
 });
 

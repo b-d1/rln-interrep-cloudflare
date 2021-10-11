@@ -9,7 +9,6 @@
     "semaphore-lib": "git+https://github.com/akinovak/semaphore-lib.git#dev",
     "socket.io-client": "^4.2.0",
     "axios": "^0.21.4"
-
   },
   "devDependencies": {
     "@types/node": "^16.9.4",
@@ -21,6 +20,7 @@
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier": "prettier --write \"**/*.{js,json,md,sol,ts}\""
   }
 }

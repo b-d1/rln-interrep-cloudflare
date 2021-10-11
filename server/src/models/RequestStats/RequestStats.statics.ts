@@ -2,49 +2,28 @@ import RequestStats from "./RequestStats.model";
 import { IRequestStats, IShares } from "./RequestStats.types";
 import { getHostFromUrl } from "../../utils/utils";
 
-export async function getByEpochAndSharesForUser(
-  this: typeof RequestStats,
-  host: string,
-  epoch: string,
-  nullifier: string,
-  xShare: string,
-  yShare: string
-): Promise<IRequestStats | null> {
-  return this.findOne({
-    "app.host": host,
-    "epochs.epoch": epoch,
-    "epochs.nullifierStats.nullifier": nullifier,
-    "epochs.nullifierStats.shares.xShare": xShare,
-    "epochs.nullifierStats.shares.yShare": yShare,
-  });
-}
-
 export async function getSharesForEpochForUser(
   this: typeof RequestStats,
   host: string,
   epoch: string,
   nullifier: string
 ): Promise<IShares[]> {
-  const res = await this.findOne(
+  return this.find(
     {
-      "app.host": host,
-      "epochs.epoch": epoch,
-      "epochs.nullifierStats.nullifier": nullifier,
+      appHost: host,
+      epoch,
+      nullifier,
     },
-    { "epochs.nullifierStats.shares": 1 }
+    { xShare: 1, yShare: 1 }
   );
-
-  if (!res) return [];
-
-  return res.epochs[0].nullifierStats[0].shares;
 }
 
 export async function getByEpoch(
   this: typeof RequestStats,
   host: string,
   epoch: string
-): Promise<IRequestStats | null> {
-  return this.findOne({ "app.host": host, "epochs.epoch": epoch });
+): Promise<IRequestStats[]> {
+  return this.find({ appHost: host, epoch });
 }
 
 export async function findByApp(
@@ -65,11 +44,11 @@ export async function isDuplicateRequest(
   yShare: string
 ): Promise<boolean> {
   const request = await this.findOne({
-    "epochs.epoch": epoch,
-    "epochs.nullifierStats.nullifier": nullifier,
-    "epochs.nullifierStats.shares.xShare": xShare,
-    "epochs.nullifierStats.shares.yShare": yShare,
-    "app.host": host,
+    appHost: host,
+    epoch,
+    nullifier,
+    xShare,
+    yShare,
   });
   return request ? true : false;
 }
@@ -81,12 +60,18 @@ export async function isSpamRequest(
   nullifier: string,
   numRequests: number
 ): Promise<boolean> {
-  const request = await this.findOne({
-    "epochs.epoch": epoch,
-    "epochs.nullifierStats.nullifier": nullifier,
-    "epochs.nullifierStats.numRequests": { $gte: numRequests },
-    "app.host": host,
-  });
+  const requests = await this.aggregate([
+    {
+      $match: {
+        appHost: host,
+        epoch,
+        nullifier,
+      },
+    },
+    {
+      $count: "num_requests",
+    },
+  ]);
 
-  return request ? true : false;
+  return requests.length === 1 && requests[0].num_requests >= numRequests;
 }

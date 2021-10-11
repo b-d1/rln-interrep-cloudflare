@@ -6,7 +6,7 @@ import {
 } from "../models/MerkleTree/MerkleTree.model";
 import { IMerkleTreeNodeDocument } from "../models/MerkleTree/MerkleTree.types";
 import poseidonHash from "../utils/hasher";
-import Tree from "incrementalquintree/build/IncrementalQuinTree";
+const Tree = require("incrementalquintree/build/IncrementalQuinTree");
 
 const MERKLE_TREE_LEVELS = 15;
 
@@ -176,8 +176,8 @@ class MerkleTreeController {
     );
 
     for (const leafNode of leafNodes) {
-      if (leafNode) {
-        tree.insert(leafNode.hash);
+      if (!leafNode.banned) {
+        tree.insert(BigInt(leafNode.hash));
       } else {
         tree.insert(poseidonHash([ZERO_VALUE]));
       }

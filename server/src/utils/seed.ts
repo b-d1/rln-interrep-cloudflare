@@ -21,11 +21,10 @@ const seedGroup = async () => {
   if (!group) {
     group = new Group({ groupId: GROUP_ID });
     await group.save();
-    console.log("Group seeded.");
   }
 };
 
-const seedZeros = async (zeroValue: bigint) => {
+const seedZeros = async (zeroValue: BigInt) => {
   const zeroHashes = await MerkleTreeZero.findZeroes();
 
   if (!zeroHashes || zeroHashes.length === 0) {
@@ -40,20 +39,16 @@ const seedZeros = async (zeroValue: bigint) => {
 
       await zeroHashDocument.save();
     }
-
-    console.log("Zeroes seeded");
   }
 };
 
 const syncLeaves = async () => {
-  const nodes = await MerkleTreeNode.find({'key.level': 0});
+  const nodes = await MerkleTreeNode.find({ "key.level": 0 });
   const leaves = await getLeaves();
 
-  if(leaves.length > nodes.length) {
+  if (leaves.length > nodes.length) {
     const leavesToAdd = leaves.slice(nodes.length);
     await merkleTreeController.syncTree(GROUP_ID, leavesToAdd);
-
-    console.log("Leaves synced");
   }
 };
 

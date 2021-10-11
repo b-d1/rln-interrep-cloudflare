@@ -4,27 +4,35 @@ import {
   isSpamRequest,
   getSharesForEpochForUser,
 } from "./RequestStats.statics";
-import { IApp } from "../App/App.types";
+// import { IApp } from "../App/App.types";
 
 export interface IShares {
   xShare: string;
   yShare: string;
 }
 
-export interface INullifierStats {
-  nullifier: string;
-  numRequests: number;
-  shares: IShares[];
-}
+// export interface INullifierStats {
+//   nullifier: string;
+//   numRequests: number;
+//   shares: IShares[];
+// }
 
-export interface IEpochStats {
-  epoch: string;
-  nullifierStats: INullifierStats[];
-}
+// export interface IEpochStats {
+//   epoch: string;
+//   nullifierStats: INullifierStats[];
+// }
+
+// export interface IRequestStats {
+//   app: IApp;
+//   epochs: IEpochStats[];
+// }
 
 export interface IRequestStats {
-  app: IApp;
-  epochs: IEpochStats[];
+  appHost: string;
+  nullifier: string;
+  epoch: string;
+  xShare: string;
+  yShare: string;
 }
 
 export interface IRequestStatsDocument extends IRequestStats, Document {}

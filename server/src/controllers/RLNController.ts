@@ -44,12 +44,8 @@ class RLNController {
     );
 
     const sharesX = requestStats.map((stats) => BigInt(stats.xShare));
-    const sharesY = requestStats.map((stats) => BigInt(stats.xShare));
+    const sharesY = requestStats.map((stats) => BigInt(stats.yShare));
 
-    // sharesX.push(RLN.genSignalHash(message.url));
-    // sharesY.push(BigInt(message.yShare));
-
-    // const pKey = NRLN.retrievePrivateKey(sharesX, shares Y);
     const pKey = RLN.retrievePrivateKey(
       sharesX[0],
       RLN.genSignalHash(message.url),

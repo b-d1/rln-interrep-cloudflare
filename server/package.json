@@ -10,7 +10,8 @@
     "mongoose": "^6.0.8",
     "semaphore-lib": "git+https://github.com/akinovak/semaphore-lib.git#dev",
     "socket.io": "^4.2.0",
-    "circomlib": "^0.5.5"
+    "circomlib": "^0.5.5",
+    "incrementalquintree": "^1.0.7"
   },
   "devDependencies": {
     "@types/node": "^16.9.4",
@@ -23,6 +24,7 @@
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier": "prettier --write \"**/*.{js,json,md,sol,ts}\""
   }
 }
