@@ -14,7 +14,7 @@ import { MerkleTreeRoot } from "../models/MerkleTree/MerkleTree.model";
 import MessageController from "./MessageController";
 
 class RLNController {
-  spamThreshold: number = 1;
+  spamThreshold: number = parseInt(process.env.SPAM_TRESHOLD as string, 10);
   merkleTreeController: MerkleTreeController;
   messageController: MessageController;
   verifierKey: any;

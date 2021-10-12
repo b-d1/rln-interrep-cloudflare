@@ -1,4 +1,3 @@
-import Group from "../models/group/Group.model";
 import {
   MerkleTreeNode,
   MerkleTreeZero,
@@ -6,19 +5,23 @@ import {
 } from "../models/MerkleTree/MerkleTree.model";
 import { IMerkleTreeNodeDocument } from "../models/MerkleTree/MerkleTree.types";
 import poseidonHash from "../utils/hasher";
+import GroupController from "./GroupController";
 const Tree = require("incrementalquintree/build/IncrementalQuinTree");
 
-const MERKLE_TREE_LEVELS = 15;
-
-// Zero value complies with the InterRep semaphore groups
+// Zero value complies with the InterRep semaphore groups zero value
 const ZERO_VALUE = BigInt(0);
 
-const checkGroup = async (groupId: string): Promise<boolean> => {
-  const group = await Group.findOne({ groupId });
-  return group ? true : false;
-};
-
 class MerkleTreeController {
+
+
+  groupController: GroupController;
+
+  constructor(
+    groupController: GroupController,
+  ) {
+    this.groupController = groupController;
+  }
+
   public syncTree = async (
     groupId: string,
     idCommitments: string[]
@@ -37,9 +40,12 @@ class MerkleTreeController {
     groupId: string,
     idCommitment: string
   ): Promise<number> => {
-    if (!checkGroup(groupId)) {
+    const groupExists = await this.groupController.groupExists(groupId);
+
+    if (!groupExists) {
       throw new Error(`The group ${groupId} does not exist`);
     }
+
     const node = await MerkleTreeNode.findByGroupIdAndHash(
       groupId,
       idCommitment
@@ -59,9 +65,12 @@ class MerkleTreeController {
     groupId: string,
     idCommitment: string
   ): Promise<string> => {
-    if (!checkGroup(groupId)) {
+    const groupExists = await this.groupController.groupExists(groupId);
+
+    if (!groupExists) {
       throw new Error(`The group ${groupId} does not exist`);
     }
+
 
     if (await MerkleTreeNode.findByGroupIdAndHash(groupId, idCommitment)) {
       throw new Error(`The identity commitment ${idCommitment} already exist`);
@@ -77,16 +86,18 @@ class MerkleTreeController {
     // Get next available index at level 0.
     let currentIndex = await MerkleTreeNode.getNumberOfNodes(groupId, 0);
 
-    if (currentIndex >= 2 ** MERKLE_TREE_LEVELS) {
+    const merkleTreeLevels = parseInt(process.env.MERKLE_TREE_LEVELS as string, 10);
+
+    if (currentIndex >= 2 ** merkleTreeLevels) {
       throw new Error(`The tree is full`);
     }
 
     let node: any = await MerkleTreeNode.create({
       key: { groupId, level: 0, index: currentIndex },
-      hash: idCommitment,
+      hash: idCommitment
     });
 
-    for (let level = 0; level < MERKLE_TREE_LEVELS; level++) {
+    for (let level = 0; level < merkleTreeLevels; level++) {
       if (currentIndex % 2 === 0) {
         node.siblingHash = zeroes[level].hash;
 
@@ -163,13 +174,16 @@ class MerkleTreeController {
   };
 
   public previewNewRoot = async (groupId: string): Promise<string> => {
-    if (!checkGroup(groupId)) {
+    const groupExists = await this.groupController.groupExists(groupId);
+
+    if (!groupExists) {
       throw new Error(`The group ${groupId} does not exist`);
     }
 
+
     const leafNodes = await MerkleTreeNode.findAllLeafsByGroup(groupId);
     const tree = new Tree.IncrementalQuinTree(
-      MERKLE_TREE_LEVELS,
+      parseInt(process.env.MERKLE_TREE_LEVELS as string, 10),
       ZERO_VALUE,
       2,
       poseidonHash
@@ -190,7 +204,9 @@ class MerkleTreeController {
     groupId: string,
     idCommitment: string
   ): Promise<any> => {
-    if (!checkGroup(groupId)) {
+    const groupExists = await this.groupController.groupExists(groupId);
+
+    if (!groupExists) {
       throw new Error(`The group ${groupId} does not exist`);
     }
 
@@ -268,6 +284,35 @@ class MerkleTreeController {
       });
     });
   };
+
+  public getNumLeaves = async (): Promise<number> => {
+    const nodes = await MerkleTreeNode.find({ "key.level": 0 });
+    return nodes.length;
+  }
+
+  public seedZeros = async (zeroValue: BigInt = BigInt(0)) => {
+    const zeroHashes = await MerkleTreeZero.findZeroes();
+
+    const merkleTreeLevels = parseInt(process.env.MERKLE_TREE_LEVELS as string, 10);
+
+    if (!zeroHashes || zeroHashes.length === 0) {
+      for (let level = 0; level < merkleTreeLevels; level++) {
+        zeroValue =
+          level === 0 ? zeroValue : poseidonHash([zeroValue, zeroValue]);
+
+        const zeroHashDocument = await MerkleTreeZero.create({
+          level,
+          hash: zeroValue.toString(),
+        });
+
+        await zeroHashDocument.save();
+      }
+    }
+
+    console.log("Zeroes seeded");
+
+  };
+
 }
 
 export default MerkleTreeController;

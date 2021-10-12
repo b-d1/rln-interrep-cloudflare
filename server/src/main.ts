@@ -1,10 +1,23 @@
 import express from "express";
 import http from "http";
-import { seed } from "./utils/seed";
+import { sync } from "./interrep_sync";
 import { initDb } from "./db";
 import { userRouter, appRouter } from "./api";
+import {merkleTreeController} from "./controllers";
+import dotenv from 'dotenv';
 
-const PORT = 8080;
+dotenv.config();
+
+
+const syncLoop = async (interval: number = 60 * 1000) => {
+  console.log("syncing...")
+  await sync();
+  setInterval(async () => {
+    console.log("syncing loop...")
+   await sync();
+  }, interval)
+
+}
 
 const main = async () => {
   // init express and SocketIO
@@ -13,8 +26,8 @@ const main = async () => {
   const server = http.createServer(app);
 
   await initDb();
-  // seed database if data doesn't exist
-  await seed();
+  // seed zeroes if necessary
+  await merkleTreeController.seedZeros()
 
   app.use(express.json());
 
@@ -25,9 +38,12 @@ const main = async () => {
     res.send("<h1>Welcome to cloudflare rate limiting service.</h1>");
   });
 
-  server.listen(PORT, () => {
-    console.log(`Rate limiting service running on: ${PORT}`);
+  server.listen(process.env.SERVER_PORT, () => {
+    console.log(`Rate limiting service running on: ${process.env.SERVER_PORT}`);
   });
+
+  syncLoop();
+
 };
 
 main();

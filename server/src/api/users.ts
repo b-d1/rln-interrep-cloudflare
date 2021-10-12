@@ -1,7 +1,7 @@
 import express from "express";
 import { Server } from "socket.io";
 import { RedirectVerificationStatus, RedirectMessage } from "../utils/types";
-import { syncLeaves } from "../utils/seed";
+// import { syncLeaves } from "../utils/seed";
 import App from "../models/App/App.model";
 
 import {
@@ -16,7 +16,7 @@ const ACCESS_KEY = "1234";
 
 router.post("/access", async (req, res) => {
   // TODO: remove syncing before access, create a separate background syncing process
-  await syncLeaves();
+  // await syncLeaves();
 
   const redirectMessage: RedirectMessage = req.body as RedirectMessage;
 

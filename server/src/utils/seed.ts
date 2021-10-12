@@ -1,4 +1,3 @@
-import Group from "../models/group/Group.model";
 import {
   MerkleTreeZero,
   MerkleTreeNode,
@@ -7,28 +6,27 @@ import { merkleTreeController } from "../controllers";
 import poseidonHash from "./hasher";
 import { getLeaves } from "./requests";
 
-const MERKLE_TREE_LEVELS = 15;
-const GROUP_ID = "TWITTER";
-
 const seed = async () => {
-  await seedGroup();
+  // await seedGroup();
+  // await syncLeaves();
   await seedZeros(BigInt(0));
-  await syncLeaves();
 };
 
-const seedGroup = async () => {
-  let group = await Group.findOne({ groupId: GROUP_ID });
-  if (!group) {
-    group = new Group({ groupId: GROUP_ID });
-    await group.save();
-  }
-};
+// const seedGroup = async () => {
+//   let group = await Group.findOne({ groupId: GROUP_ID });
+//   if (!group) {
+//     group = new Group({ groupId: GROUP_ID });
+//     await group.save();
+//   }
+// };
 
 const seedZeros = async (zeroValue: BigInt) => {
   const zeroHashes = await MerkleTreeZero.findZeroes();
 
+  const merkleTreeLevels = parseInt(process.env.MERKLE_TREE_LEVELS as string, 10);
+
   if (!zeroHashes || zeroHashes.length === 0) {
-    for (let level = 0; level < MERKLE_TREE_LEVELS; level++) {
+    for (let level = 0; level < merkleTreeLevels; level++) {
       zeroValue =
         level === 0 ? zeroValue : poseidonHash([zeroValue, zeroValue]);
 
@@ -42,14 +40,14 @@ const seedZeros = async (zeroValue: BigInt) => {
   }
 };
 
-const syncLeaves = async () => {
-  const nodes = await MerkleTreeNode.find({ "key.level": 0 });
-  const leaves = await getLeaves();
+// const syncLeaves = async (groupId: string) => {
+//   const nodes = await MerkleTreeNode.find({ "key.level": 0 });
+//   const leaves = await getLeaves();
 
-  if (leaves.length > nodes.length) {
-    const leavesToAdd = leaves.slice(nodes.length);
-    await merkleTreeController.syncTree(GROUP_ID, leavesToAdd);
-  }
-};
+//   if (leaves.length > nodes.length) {
+//     const leavesToAdd = leaves.slice(nodes.length);
+//     await merkleTreeController.syncTree(groupId, leavesToAdd);
+//   }
+// };
 
-export { seed, seedGroup, syncLeaves };
+export { seed };

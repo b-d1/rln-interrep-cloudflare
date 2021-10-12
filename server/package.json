@@ -6,12 +6,13 @@
   "author": "Blagoj Dimovski",
   "license": "MIT",
   "dependencies": {
+    "circomlib": "^0.5.5",
+    "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "incrementalquintree": "^1.0.7",
     "mongoose": "^6.0.8",
     "semaphore-lib": "git+https://github.com/akinovak/semaphore-lib.git#dev",
-    "socket.io": "^4.2.0",
-    "circomlib": "^0.5.5",
-    "incrementalquintree": "^1.0.7"
+    "socket.io": "^4.2.0"
   },
   "devDependencies": {
     "@types/node": "^16.9.4",
