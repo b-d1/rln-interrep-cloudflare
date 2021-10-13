@@ -22,7 +22,7 @@ const registerToInterRepGroup = async (idCommitment: BigInt): Promise<string> =>
   const groupId = process.env.INTERREP_GROUP_ID;
   const oauthToken = process.env.OAUTH_TOKEN;
 try {
-  const result = await axios.post(`${process.env.INTERREP_API_BASE_URL}/groups/${provider}/${groupId}/${idCommitment.toString()}`, undefined, {headers: {'Authorization': `token ${oauthToken}`}});
+  const result = await axios.post(`${process.env.INTERREP_API_BASE_URL}/groups/${provider}/""/${idCommitment.toString()}`, undefined, {headers: {'Authorization': `token ${oauthToken}`}});
   const rootHash = result.data.data;
   console.log("root hash", rootHash)
   return rootHash;
