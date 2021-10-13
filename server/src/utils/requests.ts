@@ -10,21 +10,26 @@ const getLeaves = async () => {
 
 const getInterrepGroups = async () => {
 
-  const result = await axios.post(`${process.env.INTERREP_SUBGRAPH_URL}`, {query: getGroups()});
+  const query = {"query": getGroups()};
+  const result = await axios.post(`${process.env.INTERREP_SUBGRAPH_URL}`, query);
   return result.data.data;
 
 };
 
 const getInterrepGroupMetadata = async (groupId: string) => {
 
-  const result = await axios.post(`${process.env.INTERREP_SUBGRAPH_URL}`, {query: getGroupMetadata(groupId)});
+  const query = {"query": getGroupMetadata(groupId)};
+
+  const result = await axios.post(`${process.env.INTERREP_SUBGRAPH_URL}`, query);
   return result.data.data;
 
 };
 
 const getInterRepLeaves = async (groupId: string, first: number = 100, skip: number = 0) => {
 
-  const result = await axios.post(`${process.env.INTERREP_SUBGRAPH_URL}`, {query: getAllLeaves(groupId, first, skip)});
+  const query = {"query": getAllLeaves(groupId, first, skip)};
+
+  const result = await axios.post(`${process.env.INTERREP_SUBGRAPH_URL}`, query);
   return result.data.data;
 
 }

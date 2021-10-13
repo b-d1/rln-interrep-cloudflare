@@ -1,20 +1,48 @@
 import * as path from "path";
-import axios from "axios";
+import fs from "fs";
 import { RLN } from "semaphore-lib";
 import { RedirectMessage } from "./types";
-
+import { accessApp } from "./requests";
 const PROVER_KEY_PATH: string = path.join("./circuitFiles", "rln_final.zkey");
 const CIRCUIT_PATH: string = path.join("./circuitFiles", "rln.wasm");
+const ID_PATH: string = path.join("./id", "id.json")
 
-const RATE_LIMITING_SERVER_BASE_URL = "http://localhost:8080";
-const INTERREP_API_BASE_URL = "http://localhost:8084";
+RLN.setHasher("poseidon");
 
-const registerToInterRep = async (idCommitment: BigInt) => {
-  const result = await axios.post(`${INTERREP_API_BASE_URL}/register`, {
-    identity: idCommitment.toString(),
-  });
-  return result.data;
-};
+
+interface Identity {
+  secret: bigint | string,
+  idCommitment: bigint | string,
+}
+
+/**
+ * Read identity from filesystem, if it doesn't exists generate new one
+ */
+const getIdentity = (): Identity => {
+
+  let idData: Identity= {
+    secret: BigInt(0),
+    idCommitment: BigInt(0)
+  };
+  try {
+    idData = JSON.parse(fs.readFileSync(ID_PATH, {encoding:'utf-8'}));
+  } catch(e) {
+
+    const identity = RLN.genIdentity();
+    const identitySecret: bigint = RLN.calculateIdentitySecret(identity);
+    const identityCommitment: bigint = RLN.genIdentityCommitment(identitySecret);
+
+    idData = {
+      secret: identitySecret.toString(),
+      idCommitment: identityCommitment.toString()
+    }
+    fs.writeFileSync(ID_PATH, JSON.stringify(idData));
+  }
+  idData.secret = BigInt(idData.secret)
+  idData.idCommitment = BigInt(idData.idCommitment)
+  return idData;
+
+}
 
 const visitApp = async (
   identitySecret: bigint,
@@ -51,12 +79,7 @@ const visitApp = async (
     rlnIdentifier: rlnIdentifier.toString(),
   };
 
-  const res = await axios.post(
-    `${RATE_LIMITING_SERVER_BASE_URL}/users/access`,
-    request
-  );
-
-  return res.data;
+  return await accessApp(request);
 };
 
-export { registerToInterRep, visitApp };
+export { getIdentity, visitApp, Identity };

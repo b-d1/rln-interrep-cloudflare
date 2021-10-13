@@ -1,83 +1,81 @@
-// Single user vote
-
-import { registerToInterRep, visitApp } from "./api";
-import { RLN, Identity } from "semaphore-lib";
-import { deserializeWitness } from "./utils";
+import { visitApp, getIdentity, Identity } from "./rln";
 import { exit } from "process";
-const INTERREP_GROUP = "TWITTER";
+import { registerToInterRepGroup, getInterRepUserStatus, getInterRepWitness } from "./requests";
 
-RLN.setHasher("poseidon");
-const APP_BASE_URL = "http://localhost:8082";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const main = async () => {
-  const identity: Identity = RLN.genIdentity();
-  const identitySecret: bigint = RLN.calculateIdentitySecret(identity);
-  const identityCommitment: BigInt = RLN.genIdentityCommitment(identitySecret);
-
-  // Register to interrep
-  const userData = await registerToInterRep(identityCommitment);
+  const identity: Identity = getIdentity();
   const rlnIdentifier = BigInt(5);
-  const witness = deserializeWitness(userData.witness);
 
-  // the epoch is the current unix timestamp for the minute
-  // we simulate with 2 requests per minute
-  // const epoch = (Math.floor((new Date()).getTime() / (1000 * 60))).toString()
+  // Register to interrep, if not registered already
+  const isRegistered = await getInterRepUserStatus(identity.idCommitment as bigint);
+  if(!isRegistered) {
+    await registerToInterRepGroup(identity.idCommitment as bigint);
+  }
+
+  // get witness
+  const witness = await getInterRepWitness(identity.idCommitment as bigint);
+
+
   const epoch = "test-epoch";
 
   // Visit app
 
   // request 1
   let result = await visitApp(
-    identitySecret,
+    identity.secret as bigint,
     witness,
     rlnIdentifier,
-    INTERREP_GROUP,
+    process.env.INTERREP_GROUP_ID as string,
     epoch,
-    `${APP_BASE_URL}/hello`
+    `${process.env.APP_BASE_URL}/hello`
   );
   console.log(result);
 
   // request 2 (duplicate)
   result = await visitApp(
-    identitySecret,
+    identity.secret as bigint,
     witness,
     rlnIdentifier,
-    INTERREP_GROUP,
+    process.env.INTERREP_GROUP_ID as string,
     epoch,
-    `${APP_BASE_URL}/hello`
+    `${process.env.APP_BASE_URL}/hello`
   );
   console.log(result);
 
   // request 3 (spam)
   result = await visitApp(
-    identitySecret,
+    identity.secret as bigint,
     witness,
     rlnIdentifier,
-    INTERREP_GROUP,
+    process.env.INTERREP_GROUP_ID as string,
     epoch,
-    `${APP_BASE_URL}/hi`
+    `${process.env.APP_BASE_URL}/hi`
   );
   console.log(result);
 
   // request 4 (request should be flagged early as duplicate)
   result = await visitApp(
-    identitySecret,
+    identity.secret as bigint,
     witness,
     rlnIdentifier,
-    INTERREP_GROUP,
+    process.env.INTERREP_GROUP_ID as string,
     epoch,
-    `${APP_BASE_URL}/hello`
+    `${process.env.APP_BASE_URL}/hello`
   );
   console.log(result);
 
   // request 5 (request should be invalid - the idCommitment is removed from the tree)
   result = await visitApp(
-    identitySecret,
+    identity.secret as bigint,
     witness,
     rlnIdentifier,
-    INTERREP_GROUP,
+    process.env.INTERREP_GROUP_ID as string,
     epoch,
-    `${APP_BASE_URL}/`
+    `${process.env.APP_BASE_URL}/`
   );
   console.log(result);
 

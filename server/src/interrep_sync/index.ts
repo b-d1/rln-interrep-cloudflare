@@ -2,6 +2,19 @@ import { merkleTreeController, groupController } from "../controllers";
 import {getInterRepLeaves, getInterrepGroups} from "../utils/requests"
 
 
+const syncLoop = async () => {
+
+    // do an initial sync
+    await sync();
+
+    const syncInterval = parseInt(process.env.INTERREP_SYNC_INTERVAL_SECONDS as string, 10) * 1000;
+    // start the loop
+    setInterval(async () => {
+     await sync();
+    }, syncInterval)
+
+  }
+
 const sync = async () => {
     const groups = (await getInterrepGroups()).groups;
     await syncGroups(groups);
@@ -11,7 +24,7 @@ const sync = async () => {
 const syncGroups = async (groups) => {
     for(const group of groups) {
         const groupId = group.id;
-        const numLeaves = group.leafCount;
+        const numLeaves = parseInt(group.leafCount, 10);
         const groupExists = await groupController.groupExists(groupId)
         if(!groupExists) {
             await groupController.addGroup(groupId)
@@ -22,7 +35,7 @@ const syncGroups = async (groups) => {
 
 
 const syncGroup = async (groupId: string, leavesInGroup: number) => {
-    const numLeavesInDb = await merkleTreeController.getNumLeaves();
+    const numLeavesInDb = await merkleTreeController.getNumLeaves(groupId);
 
     // we're up to date, no sync needed
     if(numLeavesInDb === leavesInGroup) return;
@@ -36,13 +49,13 @@ const syncGroup = async (groupId: string, leavesInGroup: number) => {
     for(let i = 0; i < fullChunksToFetch; i++) {
         const first = numLeavesInDb + (i * leavesPerChunk) + leavesPerChunk;
         const skip = numLeavesInDb + (i * leavesPerChunk);
-        const result = await syncLeaves(groupId, first, skip)
+        await syncLeaves(groupId, first, skip)
     }
 
     if(leftoverLeaves > 0) {
         const first = leavesInGroup;
         const skip = numLeavesInDb + (fullChunksToFetch * leavesPerChunk);
-        const result = await syncLeaves(groupId, first, skip)
+        await syncLeaves(groupId, first, skip)
     }
 
 };
@@ -50,10 +63,9 @@ const syncGroup = async (groupId: string, leavesInGroup: number) => {
 const syncLeaves = async (groupId: string, first: number, skip: number) => {
     const memberData = (await getInterRepLeaves(groupId, first, skip)).group.members;
     const idCommitments = memberData.map(data => data.identityCommitment);
-    const result = await merkleTreeController.syncTree(groupId, idCommitments);
-    return result;
+    await merkleTreeController.syncTree(groupId, idCommitments);
 }
 
 export {
-    sync
+    syncLoop
 }

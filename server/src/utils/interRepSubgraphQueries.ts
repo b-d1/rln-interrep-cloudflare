@@ -3,7 +3,7 @@ export const getGroupMetadata = (groupId: string) => {
 
     return `
     {
-        group(id:${groupId}) {
+        group(id:"${groupId}") {
             id
             name
             leafCount
@@ -19,7 +19,7 @@ export const getAllLeaves = (groupId: string, first: number = 100, skip: number 
 
     return `
     {
-        group(id:${groupId}) {
+        group(id:"${groupId}") {
           id
           name
           leafCount
@@ -39,7 +39,7 @@ export const getLatestLeaves = (groupId: string, latest: number = 100) => {
 
     return `
     {
-        group(id:${groupId}) {
+        group(id:"${groupId}") {
           id
           name
           leafCount

@@ -8,7 +8,8 @@
   "dependencies": {
     "semaphore-lib": "git+https://github.com/akinovak/semaphore-lib.git#dev",
     "socket.io-client": "^4.2.0",
-    "axios": "^0.21.4"
+    "axios": "^0.21.4",
+    "dotenv": "^10.0.0"
   },
   "devDependencies": {
     "@types/node": "^16.9.4",

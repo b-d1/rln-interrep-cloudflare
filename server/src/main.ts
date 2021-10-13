@@ -1,23 +1,12 @@
 import express from "express";
 import http from "http";
-import { sync } from "./interrep_sync";
+import { syncLoop } from "./interrep_sync";
 import { initDb } from "./db";
 import { userRouter, appRouter } from "./api";
 import {merkleTreeController} from "./controllers";
 import dotenv from 'dotenv';
 
 dotenv.config();
-
-
-const syncLoop = async (interval: number = 60 * 1000) => {
-  console.log("syncing...")
-  await sync();
-  setInterval(async () => {
-    console.log("syncing loop...")
-   await sync();
-  }, interval)
-
-}
 
 const main = async () => {
   // init express and SocketIO

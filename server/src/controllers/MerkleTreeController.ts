@@ -285,9 +285,9 @@ class MerkleTreeController {
     });
   };
 
-  public getNumLeaves = async (): Promise<number> => {
-    const nodes = await MerkleTreeNode.find({ "key.level": 0 });
-    return nodes.length;
+  public getNumLeaves = async (groupId: string): Promise<number> => {
+    const numLeaves = await MerkleTreeNode.getNumberOfNodes(groupId, 0);
+    return numLeaves;
   }
 
   public seedZeros = async (zeroValue: BigInt = BigInt(0)) => {
@@ -308,8 +308,6 @@ class MerkleTreeController {
         await zeroHashDocument.save();
       }
     }
-
-    console.log("Zeroes seeded");
 
   };
 
