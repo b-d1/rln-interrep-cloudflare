@@ -2,6 +2,7 @@ import * as path from "path";
 import axios from "axios";
 import { NRLN } from "semaphore-lib";
 import { RedirectMessage } from "./types";
+import * as bigintConversion from 'bigint-conversion';
 
 const PROVER_KEY_PATH: string = path.join("./circuitFiles", "rln_final.zkey");
 const CIRCUIT_PATH: string = path.join("./circuitFiles", "rln.wasm");
@@ -17,7 +18,13 @@ const registerToInterRep = async (idCommitment: BigInt) => {
   });
   return result.data;
 };
-import * as bigintConversion from 'bigint-conversion';
+
+const getWitness = async (groupId: string, idCommitment: BigInt) => {
+  const result = await axios.get(`${RATE_LIMITING_SERVER_BASE_URL}/users/witness/${groupId}/${idCommitment.toString()}`);
+  return result.data.data;
+};
+
+
 
 const visitApp = async (
   identitySecret: bigint[],
@@ -60,4 +67,4 @@ const visitApp = async (
   return res.data;
 };
 
-export { registerToInterRep, visitApp };
+export { registerToInterRep, visitApp, getWitness };

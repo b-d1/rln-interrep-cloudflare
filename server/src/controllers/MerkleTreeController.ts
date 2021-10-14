@@ -2,7 +2,6 @@ import Group from "../models/group/Group.model";
 import {
   MerkleTreeNode,
   MerkleTreeZero,
-  MerkleTreeRoot,
 } from "../models/MerkleTree/MerkleTree.model";
 import { IMerkleTreeNodeDocument } from "../models/MerkleTree/MerkleTree.types";
 import poseidonHash from "../utils/hasher";
@@ -19,19 +18,37 @@ const checkGroup = async (groupId: string): Promise<boolean> => {
 };
 
 class MerkleTreeController {
+
+  public updateTree = async (): Promise<boolean> => {
+    const leaves = await MerkleTreeNode.findAllLeaves();
+    const leavesData: Record<string, string>[] = leaves.map(leaf => { return {"groupId": leaf.key.groupId, "commitment":  leaf.hash}});
+
+    await MerkleTreeNode.remove({});
+    const leavesAfterRemoved = await MerkleTreeNode.findAllLeaves();
+    console.log("leaves after removed", leavesAfterRemoved.length);
+    return await this.addLeaves(leavesData);
+
+
+  };
+
   public syncTree = async (
     groupId: string,
     idCommitments: string[]
   ): Promise<boolean> => {
-    let root: string = "";
-    for (const idCommitment of idCommitments) {
-      root = await this.appendLeaf(groupId, idCommitment);
+    const leavesData = idCommitments.map(idCommitment => { return {"groupId": groupId, "commitment": idCommitment}});
+    return await this.addLeaves(leavesData);
+  };
+
+  private addLeaves = async (ids: Record<string, string>[]) => {
+
+    const root: string = "";
+    for (const id of ids) {
+      await this.appendLeaf(id.groupId, id.commitment);
     }
 
-    const treeRoot = new MerkleTreeRoot({ hash: root });
-    treeRoot.save();
     return true;
-  };
+
+  }
 
   public banUser = async (
     groupId: string,
@@ -51,6 +68,7 @@ class MerkleTreeController {
       );
     }
     node.banned = true;
+    node.hash = poseidonHash([BigInt(0)]).toString();
     await node.save();
     return node.key.index;
   };
@@ -155,37 +173,7 @@ class MerkleTreeController {
     return node.hash;
   };
 
-  public updateLatestRoot = async (groupId: string): Promise<boolean> => {
-    const newRootHash = await this.previewNewRoot(groupId);
-    const newRoot = new MerkleTreeRoot({ hash: newRootHash });
-    await newRoot.save();
-    return true;
-  };
 
-  public previewNewRoot = async (groupId: string): Promise<string> => {
-    if (!checkGroup(groupId)) {
-      throw new Error(`The group ${groupId} does not exist`);
-    }
-
-    const leafNodes = await MerkleTreeNode.findAllLeaves();
-    const tree = new Tree.IncrementalQuinTree(
-      MERKLE_TREE_LEVELS,
-      ZERO_VALUE,
-      2,
-      poseidonHash
-    );
-
-    for (const leafNode of leafNodes) {
-      if (!leafNode.banned) {
-        tree.insert(BigInt(leafNode.hash));
-      } else {
-        tree.insert(poseidonHash([ZERO_VALUE]));
-      }
-    }
-    return tree.root.toString();
-  };
-
-  // Not used currently, the users should retreive their witness from InterRep
   public retrievePath = async (
     groupId: string,
     idCommitment: string

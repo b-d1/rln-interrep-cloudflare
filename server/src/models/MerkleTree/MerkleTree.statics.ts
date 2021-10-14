@@ -1,13 +1,11 @@
 import {
   MerkleTreeNode,
   MerkleTreeZero,
-  MerkleTreeRoot,
 } from "./MerkleTree.model";
 import {
   IMerkleTreeNodeDocument,
   IMerkleTreeNodeKey,
   IMerkleTreeZeroDocument,
-  IMerkleTreeRootDocument,
 } from "./MerkleTree.types";
 
 export async function findByLevelAndIndex(
@@ -46,6 +44,12 @@ export async function findAllLeaves(
   return this.find({ "key.level": 0 });
 }
 
+export async function findRoot(
+  this: typeof MerkleTreeNode
+): Promise<IMerkleTreeNodeDocument | null> {
+  return this.findOne({"key.level": 15, "key.index": 0});
+}
+
 
 
 export async function findZeroes(
@@ -54,8 +58,3 @@ export async function findZeroes(
   return this.find();
 }
 
-export async function getLatest(
-  this: typeof MerkleTreeRoot
-): Promise<IMerkleTreeRootDocument | null> {
-  return this.findOne().sort({ _id: -1 });
-}

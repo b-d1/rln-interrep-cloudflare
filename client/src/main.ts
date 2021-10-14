@@ -1,6 +1,6 @@
 // Single user vote
 
-import { registerToInterRep, visitApp } from "./api";
+import { registerToInterRep, visitApp, getWitness } from "./api";
 import { NRLN, Identity } from "semaphore-lib";
 import { deserializeWitness } from "./utils";
 import { exit } from "process";
@@ -10,6 +10,10 @@ const SPAM_THRESHOLD = 3;
 NRLN.setHasher("poseidon");
 const APP_BASE_URL = "http://localhost:8082";
 
+const sleep = async (interval: number = 25 * 1000) => {
+  await new Promise(r => setTimeout(r, interval));
+}
+
 const main = async () => {
   const identitySecret: bigint[] = NRLN.genIdentitySecrets(SPAM_THRESHOLD);
   const identityCommitment: BigInt = NRLN.genIdentityCommitment(identitySecret);
@@ -17,8 +21,13 @@ const main = async () => {
   // Register to interrep
   const userData = await registerToInterRep(identityCommitment);
   const rlnIdentifier = BigInt(5);
-  const witness = deserializeWitness(userData.witness);
+  console.log("user registered to interrep");
+  // wait 15 seconds for the rln server to fetch the registration
+  await sleep();
 
+  // get witness from the rate limiting service
+  const witness = await getWitness(INTERREP_GROUP, identityCommitment)
+  console.log("witness obtained");
   // const epoch = (Math.floor((new Date()).getTime() / (1000 * 60))).toString()
   const epoch = "test-epoch";
 

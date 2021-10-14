@@ -10,10 +10,10 @@ import { getHostFromUrl } from "../utils/utils";
 import BannedUser from "../models/BannedUser/BannedUser.model";
 
 import MerkleTreeController from "./MerkleTreeController";
-import { MerkleTreeRoot } from "../models/MerkleTree/MerkleTree.model";
 import MessageController from "./MessageController";
 
 import poseidonHash from "../utils/hasher";
+import { MerkleTreeNode } from "../models/MerkleTree/MerkleTree.model";
 
 class RLNController {
   spamThreshold: number = 3;
@@ -82,14 +82,14 @@ class RLNController {
     )
       return RedirectVerificationStatus.DUPLICATE;
 
-    const latestRoot = await MerkleTreeRoot.getLatest();
-    if (!latestRoot) return RedirectVerificationStatus.INVALID;
+    const root = await MerkleTreeNode.findRoot();
+    if (!root) return RedirectVerificationStatus.INVALID;
 
     const proof: IProof = {
       proof: redirectMessage.proof,
       publicSignals: [
         BigInt(redirectMessage.yShare),
-        BigInt(latestRoot.hash),
+        BigInt(root.hash),
         BigInt(redirectMessage.nullifier),
         NRLN.genSignalHash(redirectMessage.url),
         redirectMessage.epoch

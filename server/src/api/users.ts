@@ -15,8 +15,6 @@ const router = express.Router();
 const ACCESS_KEY = "1234";
 
 router.post("/access", async (req, res) => {
-  // TODO: remove syncing before access, create a separate background syncing process
-  await syncLeaves();
 
   const redirectMessage: RedirectMessage = req.body as RedirectMessage;
 
@@ -41,11 +39,23 @@ router.post("/access", async (req, res) => {
   } else {
     if (status === RedirectVerificationStatus.SPAM) {
       await rlnController.removeUser(redirectMessage);
-      await merkleTreeController.updateLatestRoot(redirectMessage.groupId);
+      await merkleTreeController.updateTree();
     }
 
     res.json({ error: "Invalid verification", status });
   }
 });
+
+router.get("/witness/:groupId/:idCommitment", async (req, res) => {
+
+  const groupId = req.params.groupId;
+  const idCommitment = req.params.idCommitment;
+
+  console.log("id commitment", idCommitment);
+  const witness = await merkleTreeController.retrievePath(groupId, idCommitment)
+  console.log("witness obtained", witness);
+  res.json({data: witness});
+
+})
 
 export default router;

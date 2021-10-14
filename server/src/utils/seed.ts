@@ -48,6 +48,7 @@ const syncLeaves = async () => {
 
   if (leaves.length > nodes.length) {
     const leavesToAdd = leaves.slice(nodes.length);
+    console.log("new interrep leaves found: ", leaves.length - nodes.length, leavesToAdd);
     await merkleTreeController.syncTree(GROUP_ID, leavesToAdd);
   }
 };

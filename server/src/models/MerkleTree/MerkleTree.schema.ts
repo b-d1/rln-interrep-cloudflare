@@ -6,7 +6,7 @@ import {
   getNumberOfNodes,
   findAllLeaves,
   findAllLeavesByGroup,
-  getLatest,
+  findRoot,
 } from "./MerkleTree.statics";
 import {
   IMerkleTreeNode,
@@ -15,9 +15,7 @@ import {
   IMerkleTreeZero,
   IMerkleTreeZeroModel,
   IMerkleTreeZeroDocument,
-  IMerkleTreeRoot,
-  IMerkleTreeRootModel,
-  IMerkleTreeRootDocument,
+
 } from "./MerkleTree.types";
 
 // Node
@@ -50,6 +48,7 @@ MerkleTreeNodeSchema.statics.findByGroupIdAndHash = findByGroupIdAndHash;
 MerkleTreeNodeSchema.statics.getNumberOfNodes = getNumberOfNodes;
 MerkleTreeNodeSchema.statics.findAllLeavesByGroup = findAllLeavesByGroup;
 MerkleTreeNodeSchema.statics.findAllLeaves = findAllLeaves;
+MerkleTreeNodeSchema.statics.findRoot = findRoot;
 
 // Zeroes
 export const MerkleTreeZeroSchemaFields: Record<keyof IMerkleTreeZero, any> = {
@@ -63,15 +62,3 @@ export const MerkleTreeZeroSchema = new Schema<
 >(MerkleTreeZeroSchemaFields);
 
 MerkleTreeZeroSchema.statics.findZeroes = findZeroes;
-
-// Roots
-export const MerkleTreeRootSchemaFields: Record<keyof IMerkleTreeRoot, any> = {
-  hash: String,
-};
-
-export const MerkleTreeRootSchema = new Schema<
-  IMerkleTreeRootDocument,
-  IMerkleTreeRootModel
->(MerkleTreeRootSchemaFields);
-
-MerkleTreeRootSchema.statics.getLatest = getLatest;

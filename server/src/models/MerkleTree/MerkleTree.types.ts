@@ -6,7 +6,7 @@ import {
   getNumberOfNodes,
   findAllLeavesByGroup,
   findAllLeaves,
-  getLatest,
+  findRoot
 } from "./MerkleTree.statics";
 
 export interface IMerkleTreeNodeKey {
@@ -31,7 +31,7 @@ export interface IMerkleTreeNodeModel extends Model<IMerkleTreeNodeDocument> {
   getNumberOfNodes: typeof getNumberOfNodes;
   findAllLeavesyGroup: typeof findAllLeavesByGroup;
   findAllLeaves: typeof findAllLeaves;
-
+  findRoot: typeof findRoot;
 }
 
 export interface IMerkleTreeZero {
@@ -43,14 +43,4 @@ export interface IMerkleTreeZeroDocument extends IMerkleTreeZero, Document {}
 
 export interface IMerkleTreeZeroModel extends Model<IMerkleTreeZeroDocument> {
   findZeroes: typeof findZeroes;
-}
-
-export interface IMerkleTreeRoot {
-  hash: string;
-}
-
-export interface IMerkleTreeRootDocument extends IMerkleTreeRoot, Document {}
-
-export interface IMerkleTreeRootModel extends Model<IMerkleTreeRootDocument> {
-  getLatest: typeof getLatest;
 }

@@ -1,10 +1,21 @@
 import express from "express";
 import http from "http";
-import { seed } from "./utils/seed";
+import { seed, syncLeaves } from "./utils/seed";
 import { initDb } from "./db";
 import { userRouter, appRouter } from "./api";
 
 const PORT = 8080;
+
+const interRepSync = async (interval: number = 20 * 1000) => {
+  console.log("fetching data...")
+  await syncLeaves();
+  setInterval( async () => {
+    console.log("syncing interrep data...");
+    await syncLeaves();
+  }, interval);
+
+}
+
 
 const main = async () => {
   // init express and SocketIO
@@ -28,6 +39,9 @@ const main = async () => {
   server.listen(PORT, () => {
     console.log(`Rate limiting service running on: ${PORT}`);
   });
+
+  interRepSync();
+
 };
 
 main();
