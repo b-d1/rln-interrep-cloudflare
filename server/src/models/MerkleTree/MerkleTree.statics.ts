@@ -33,12 +33,20 @@ export async function getNumberOfNodes(
   return this.countDocuments({ "key.groupId": groupId, "key.level": level });
 }
 
-export async function findAllLeafsByGroup(
+export async function findAllLeavesByGroup(
   this: typeof MerkleTreeNode,
   groupId: string
 ): Promise<IMerkleTreeNodeDocument[]> {
   return this.find({ "key.groupId": groupId, "key.level": 0 });
 }
+
+export async function findAllLeaves(
+  this: typeof MerkleTreeNode,
+): Promise<IMerkleTreeNodeDocument[]> {
+  return this.find({ "key.level": 0 });
+}
+
+
 
 export async function findZeroes(
   this: typeof MerkleTreeZero

@@ -4,7 +4,8 @@ import {
   findByGroupIdAndHash,
   findZeroes,
   getNumberOfNodes,
-  findAllLeafsByGroup,
+  findAllLeaves,
+  findAllLeavesByGroup,
   getLatest,
 } from "./MerkleTree.statics";
 import {
@@ -47,7 +48,8 @@ export const MerkleTreeNodeSchema = new Schema<
 MerkleTreeNodeSchema.statics.findByLevelAndIndex = findByLevelAndIndex;
 MerkleTreeNodeSchema.statics.findByGroupIdAndHash = findByGroupIdAndHash;
 MerkleTreeNodeSchema.statics.getNumberOfNodes = getNumberOfNodes;
-MerkleTreeNodeSchema.statics.findAllLeafsByGroup = findAllLeafsByGroup;
+MerkleTreeNodeSchema.statics.findAllLeavesByGroup = findAllLeavesByGroup;
+MerkleTreeNodeSchema.statics.findAllLeaves = findAllLeaves;
 
 // Zeroes
 export const MerkleTreeZeroSchemaFields: Record<keyof IMerkleTreeZero, any> = {

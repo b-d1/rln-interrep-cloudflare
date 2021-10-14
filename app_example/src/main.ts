@@ -36,6 +36,18 @@ const init = async () => {
     res.send({ message: `Hi from ${APP_NAME}!` });
   });
 
+  app.post("/hi1", (req, res) => {
+    res.send({ message: `Hi 1 from ${APP_NAME}!` });
+  });
+
+  app.post("/hi2", (req, res) => {
+    res.send({ message: `Hi 2 from ${APP_NAME}!` });
+  });
+
+  app.post("/hi3", (req, res) => {
+    res.send({ message: `Hi 3 from ${APP_NAME}!` });
+  });
+
   // start the Express server
   app.listen(APP_PORT, () => {
     console.log(`EXAMPLE APP server started at http://localhost:${APP_PORT}`);

@@ -167,7 +167,7 @@ class MerkleTreeController {
       throw new Error(`The group ${groupId} does not exist`);
     }
 
-    const leafNodes = await MerkleTreeNode.findAllLeafsByGroup(groupId);
+    const leafNodes = await MerkleTreeNode.findAllLeaves();
     const tree = new Tree.IncrementalQuinTree(
       MERKLE_TREE_LEVELS,
       ZERO_VALUE,

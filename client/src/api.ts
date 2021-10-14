@@ -1,6 +1,6 @@
 import * as path from "path";
 import axios from "axios";
-import { RLN } from "semaphore-lib";
+import { NRLN } from "semaphore-lib";
 import { RedirectMessage } from "./types";
 
 const PROVER_KEY_PATH: string = path.join("./circuitFiles", "rln_final.zkey");
@@ -9,37 +9,38 @@ const CIRCUIT_PATH: string = path.join("./circuitFiles", "rln.wasm");
 const RATE_LIMITING_SERVER_BASE_URL = "http://localhost:8080";
 const INTERREP_API_BASE_URL = "http://localhost:8084";
 
+const SPAM_THRESHOLD = 3;
+
 const registerToInterRep = async (idCommitment: BigInt) => {
   const result = await axios.post(`${INTERREP_API_BASE_URL}/register`, {
     identity: idCommitment.toString(),
   });
   return result.data;
 };
+import * as bigintConversion from 'bigint-conversion';
 
 const visitApp = async (
-  identitySecret: bigint,
+  identitySecret: bigint[],
   witness: any,
   rlnIdentifier: bigint,
   interRepGroup: string,
   epoch: string,
   url: string
 ) => {
-  epoch = RLN.genExternalNullifier(epoch);
-  const fullProof = await RLN.genProofFromBuiltTree(
+  epoch = NRLN.genExternalNullifier(epoch);
+  const fullProof = await NRLN.genProofFromBuiltTree(
     identitySecret,
     witness,
     epoch,
     url,
-    rlnIdentifier,
     CIRCUIT_PATH,
     PROVER_KEY_PATH
   );
 
-  const xShare: bigint = RLN.genSignalHash(url);
+  const xShare: bigint = NRLN.genSignalHash(url);
 
-  const a1 = RLN.calculateA1(identitySecret, epoch, rlnIdentifier);
-  const y = RLN.calculateY(a1, identitySecret, xShare);
-  const nullifier = RLN.genNullifier(a1, rlnIdentifier);
+  const [y, nullifier] = NRLN.calculateOutput(identitySecret, bigintConversion.hexToBigint(epoch.slice(2)), xShare, SPAM_THRESHOLD);
+
 
   const request: RedirectMessage = {
     proof: fullProof.proof,

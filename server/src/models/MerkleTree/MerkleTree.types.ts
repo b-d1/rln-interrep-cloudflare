@@ -4,7 +4,8 @@ import {
   findByGroupIdAndHash,
   findZeroes,
   getNumberOfNodes,
-  findAllLeafsByGroup,
+  findAllLeavesByGroup,
+  findAllLeaves,
   getLatest,
 } from "./MerkleTree.statics";
 
@@ -28,7 +29,9 @@ export interface IMerkleTreeNodeModel extends Model<IMerkleTreeNodeDocument> {
   findByLevelAndIndex: typeof findByLevelAndIndex;
   findByGroupIdAndHash: typeof findByGroupIdAndHash;
   getNumberOfNodes: typeof getNumberOfNodes;
-  findAllLeafsByGroup: typeof findAllLeafsByGroup;
+  findAllLeavesyGroup: typeof findAllLeavesByGroup;
+  findAllLeaves: typeof findAllLeaves;
+
 }
 
 export interface IMerkleTreeZero {

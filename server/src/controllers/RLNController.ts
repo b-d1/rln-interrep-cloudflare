@@ -3,7 +3,7 @@ import * as fs from "fs";
 
 import RequestStats from "../models/RequestStats/RequestStats.model";
 
-import { RLN, IProof } from "semaphore-lib";
+import { NRLN, IProof } from "semaphore-lib";
 import { RedirectMessage, RedirectVerificationStatus } from "../utils/types";
 
 import { getHostFromUrl } from "../utils/utils";
@@ -13,8 +13,10 @@ import MerkleTreeController from "./MerkleTreeController";
 import { MerkleTreeRoot } from "../models/MerkleTree/MerkleTree.model";
 import MessageController from "./MessageController";
 
+import poseidonHash from "../utils/hasher";
+
 class RLNController {
-  spamThreshold: number = 1;
+  spamThreshold: number = 3;
   merkleTreeController: MerkleTreeController;
   messageController: MessageController;
   verifierKey: any;
@@ -25,7 +27,7 @@ class RLNController {
   ) {
     this.merkleTreeController = treeController;
     this.messageController = msgController;
-    RLN.setHasher("poseidon");
+    NRLN.setHasher("poseidon");
 
     const keyPath = path.join("./circuitFiles/rln", "verification_key.json");
 
@@ -33,7 +35,7 @@ class RLNController {
   }
 
   public genSignalHash = (signal: string): string => {
-    return RLN.genSignalHash(signal).toString();
+    return NRLN.genSignalHash(signal).toString();
   };
 
   public removeUser = async (message: RedirectMessage) => {
@@ -46,15 +48,13 @@ class RLNController {
     const sharesX = requestStats.map((stats) => BigInt(stats.xShare));
     const sharesY = requestStats.map((stats) => BigInt(stats.yShare));
 
-    const pKey = RLN.retrievePrivateKey(
-      sharesX[0],
-      RLN.genSignalHash(message.url),
-      sharesY[0],
-      BigInt(message.yShare)
-    );
+      sharesX.push(NRLN.genSignalHash(message.url));
+      sharesY.push(BigInt(message.yShare));
 
-    // const idCommitment = NRLN.genIdentityCommitment([pKey]).toString(); // generate identity commitment from private key
-    const idCommitment = RLN.genIdentityCommitment(pKey).toString(); // generate identity commitment from private key
+    const pKey = NRLN.retrievePrivateKey(sharesX, sharesY);
+
+
+    const idCommitment = poseidonHash([pKey]).toString();
 
     const leafIndex = await this.merkleTreeController.banUser(
       message.groupId,
@@ -91,13 +91,12 @@ class RLNController {
         BigInt(redirectMessage.yShare),
         BigInt(latestRoot.hash),
         BigInt(redirectMessage.nullifier),
-        RLN.genSignalHash(redirectMessage.url),
-        redirectMessage.epoch,
-        BigInt(redirectMessage.rlnIdentifier),
+        NRLN.genSignalHash(redirectMessage.url),
+        redirectMessage.epoch
       ],
     };
 
-    const status = await RLN.verifyProof(this.verifierKey, proof);
+    const status = await NRLN.verifyProof(this.verifierKey, proof);
 
     if (!status) {
       return RedirectVerificationStatus.INVALID;

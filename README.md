@@ -23,7 +23,7 @@ Then run the apps:
 
 ### Description
 
-This repo contains a PoC application for a CloudFlare-like rate limiting service implemented using the RLN construct and the InterRep linking service. The idea is that users already registered to InterRep (their identity commitment being added to some of the semaphore groups) can access applications protected by the RateLimiting service. If the users are cought spamming, then they will be "banned" from all of the applications protected by the service, by the properties of the RLN protocol. The users will not be slashed and will not be removed from the semaphore groups, but they will not be able to generate valid RLN proofs, and thus access the applications.
+This repo contains a PoC application for a CloudFlare-like rate limiting service implemented using the RLN construct and the InterRep linking service. The idea is that users already registered to InterRep (their identity commitment being added to some of the semaphore groups) can access applications protected by the RateLimiting service. If the users are caught spamming, then they will be "banned" from all of the applications protected by the service, by the properties of the RLN protocol. The users will not be slashed and will not be removed from the semaphore groups, but they will not be able to generate valid RLN proofs, and thus access the applications.
 
 This is a simple PoC, and much more advanced rate limiting logic can be applied (i.e request limiting and proof generation based on more advanced heuristics), but the purpose of the PoC is how RLN can be applied and used for these kind of apps.
 
