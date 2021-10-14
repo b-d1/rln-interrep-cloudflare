@@ -11,9 +11,6 @@ import {
 } from "../controllers";
 const router = express.Router();
 
-// ACCESS_KEY is used just for demo purposes, more sophisticated implementation to be done`
-const ACCESS_KEY = "1234";
-
 router.post("/access", async (req, res) => {
   // TODO: remove syncing before access, create a separate background syncing process
   // await syncLeaves();
@@ -37,7 +34,9 @@ router.post("/access", async (req, res) => {
       rlnController.genSignalHash(redirectMessage.url)
     );
 
-    res.redirect(307, `${redirectMessage.url}?key=${ACCESS_KEY}`);
+    // ACCESS_KEY is used just for demo purposes, more sophisticated implementation to be done
+
+    res.redirect(307, `${redirectMessage.url}?key=${process.env.ACCESS_KEY}`);
   } else {
     if (status === RedirectVerificationStatus.SPAM) {
       await rlnController.removeUser(redirectMessage);
