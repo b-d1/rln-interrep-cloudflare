@@ -45,9 +45,16 @@ export async function findAllLeaves(
 }
 
 export async function findRoot(
-  this: typeof MerkleTreeNode
+  this: typeof MerkleTreeNode,
+  groupId: string
 ): Promise<IMerkleTreeNodeDocument | null> {
-  return this.findOne({"key.level": 15, "key.index": 0});
+  return this.findOne({"key.level": 15, "key.index": 0, "key.groupId": groupId});
+}
+
+export async function getTotalNumberOfLeaves(
+  this: typeof MerkleTreeNode,
+): Promise<number> {
+  return this.countDocuments({ "key.level": 0 });
 }
 
 

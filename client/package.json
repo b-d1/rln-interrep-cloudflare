@@ -2,7 +2,7 @@
   "name": "client",
   "version": "1.0.0",
   "description": "Rate limiting client example",
-  "main": "dist/src/main.js",
+  "main": "dist/src/singleClient.js",
   "author": "Blagoj Dimovski",
   "license": "MIT",
   "dependencies": {
@@ -20,6 +20,8 @@
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node .",
+    "singleClient": "node dist/src/singleClient.js",
+    "multiClient": "node dist/src/multiClient.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prettier": "prettier --write \"**/*.{js,json,md,sol,ts}\""
   }

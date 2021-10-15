@@ -56,7 +56,7 @@ class RLNController {
 
     const idCommitment = poseidonHash([pKey]).toString();
 
-    const leafIndex = await this.merkleTreeController.banUser(
+    await this.merkleTreeController.banUser(
       message.groupId,
       idCommitment
     );
@@ -64,11 +64,10 @@ class RLNController {
     // for accounting/metadata purposes
     const bannedUser = new BannedUser({
       idCommitment,
-      leafIndex,
       secret: pKey.toString(),
     });
 
-    bannedUser.save();
+    await bannedUser.save();
   };
 
   public verifyRlnProof = async (
@@ -82,7 +81,7 @@ class RLNController {
     )
       return RedirectVerificationStatus.DUPLICATE;
 
-    const root = await MerkleTreeNode.findRoot();
+    const root = await MerkleTreeNode.findRoot(redirectMessage.groupId);
     if (!root) return RedirectVerificationStatus.INVALID;
 
     const proof: IProof = {

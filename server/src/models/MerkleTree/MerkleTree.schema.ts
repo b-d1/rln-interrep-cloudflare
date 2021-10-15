@@ -7,6 +7,7 @@ import {
   findAllLeaves,
   findAllLeavesByGroup,
   findRoot,
+  getTotalNumberOfLeaves
 } from "./MerkleTree.statics";
 import {
   IMerkleTreeNode,
@@ -49,6 +50,7 @@ MerkleTreeNodeSchema.statics.getNumberOfNodes = getNumberOfNodes;
 MerkleTreeNodeSchema.statics.findAllLeavesByGroup = findAllLeavesByGroup;
 MerkleTreeNodeSchema.statics.findAllLeaves = findAllLeaves;
 MerkleTreeNodeSchema.statics.findRoot = findRoot;
+MerkleTreeNodeSchema.statics.getTotalNumberOfLeaves = getTotalNumberOfLeaves;
 
 // Zeroes
 export const MerkleTreeZeroSchemaFields: Record<keyof IMerkleTreeZero, any> = {

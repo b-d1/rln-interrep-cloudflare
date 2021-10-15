@@ -16,6 +16,7 @@
     "build": "yarn workspaces run build",
     "server": "yarn workspace server start",
     "client": "yarn workspace client start",
+    "multiClient": "yarn workspace client multiClient",
     "appExample": "yarn workspace app_example start",
     "interrepMock": "yarn workspace interrep_mock start"
   }

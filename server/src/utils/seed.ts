@@ -8,18 +8,19 @@ import poseidonHash from "./hasher";
 import { getLeaves } from "./requests";
 
 const MERKLE_TREE_LEVELS = 15;
-const GROUP_ID = "TWITTER";
+const INTERREP_GROUPS = ["TWITTER", "GITHUB"];
 
 const seed = async () => {
-  await seedGroup();
+  await seedGroup(INTERREP_GROUPS[0]);
+  await seedGroup(INTERREP_GROUPS[1]);
   await seedZeros(BigInt(0));
   await syncLeaves();
 };
 
-const seedGroup = async () => {
-  let group = await Group.findOne({ groupId: GROUP_ID });
+const seedGroup = async (groupId: string) => {
+  let group = await Group.findOne({ groupId });
   if (!group) {
-    group = new Group({ groupId: GROUP_ID });
+    group = new Group({ groupId });
     await group.save();
   }
 };
@@ -42,15 +43,23 @@ const seedZeros = async (zeroValue: BigInt) => {
   }
 };
 
+
 const syncLeaves = async () => {
-  const nodes = await MerkleTreeNode.find({ "key.level": 0 });
-  const leaves = await getLeaves();
+  await syncLeavesByGroup(INTERREP_GROUPS[0]);
+  await syncLeavesByGroup(INTERREP_GROUPS[1]);
+}
+
+const syncLeavesByGroup = async (groupId: string) => {
+  const nodes = await MerkleTreeNode.findAllLeavesByGroup(groupId);
+  const leaves = await getLeaves(groupId);
+
 
   if (leaves.length > nodes.length) {
     const leavesToAdd = leaves.slice(nodes.length);
     console.log("new interrep leaves found: ", leaves.length - nodes.length, leavesToAdd);
-    await merkleTreeController.syncTree(GROUP_ID, leavesToAdd);
+    await merkleTreeController.syncTree(groupId, leavesToAdd);
   }
 };
+
 
 export { seed, seedGroup, syncLeaves };

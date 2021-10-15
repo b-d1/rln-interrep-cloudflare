@@ -39,7 +39,7 @@ router.post("/access", async (req, res) => {
   } else {
     if (status === RedirectVerificationStatus.SPAM) {
       await rlnController.removeUser(redirectMessage);
-      await merkleTreeController.updateTree();
+      await merkleTreeController.updateTree(redirectMessage.groupId);
     }
 
     res.json({ error: "Invalid verification", status });
@@ -51,10 +51,12 @@ router.get("/witness/:groupId/:idCommitment", async (req, res) => {
   const groupId = req.params.groupId;
   const idCommitment = req.params.idCommitment;
 
-  console.log("id commitment", idCommitment);
-  const witness = await merkleTreeController.retrievePath(groupId, idCommitment)
-  console.log("witness obtained", witness);
-  res.json({data: witness});
+  try {
+    const witness = await merkleTreeController.retrievePath(groupId, idCommitment)
+    res.json({data: witness});
+  } catch (e: any) {
+    res.status(400).json({error: e.message})
+  }
 
 })
 

@@ -2,8 +2,8 @@ import * as path from "path";
 import axios from "axios";
 import { NRLN } from "semaphore-lib";
 import { RedirectMessage } from "./types";
-import * as bigintConversion from 'bigint-conversion';
-
+import * as bigintConversion from "bigint-conversion";
+import {accessApp} from "./requests"
 const PROVER_KEY_PATH: string = path.join("./circuitFiles", "rln_final.zkey");
 const CIRCUIT_PATH: string = path.join("./circuitFiles", "rln.wasm");
 
@@ -11,19 +11,6 @@ const RATE_LIMITING_SERVER_BASE_URL = "http://localhost:8080";
 const INTERREP_API_BASE_URL = "http://localhost:8084";
 
 const SPAM_THRESHOLD = 3;
-
-const registerToInterRep = async (idCommitment: BigInt) => {
-  const result = await axios.post(`${INTERREP_API_BASE_URL}/register`, {
-    identity: idCommitment.toString(),
-  });
-  return result.data;
-};
-
-const getWitness = async (groupId: string, idCommitment: BigInt) => {
-  const result = await axios.get(`${RATE_LIMITING_SERVER_BASE_URL}/users/witness/${groupId}/${idCommitment.toString()}`);
-  return result.data.data;
-};
-
 
 
 const visitApp = async (
@@ -46,8 +33,12 @@ const visitApp = async (
 
   const xShare: bigint = NRLN.genSignalHash(url);
 
-  const [y, nullifier] = NRLN.calculateOutput(identitySecret, bigintConversion.hexToBigint(epoch.slice(2)), xShare, SPAM_THRESHOLD);
-
+  const [y, nullifier] = NRLN.calculateOutput(
+    identitySecret,
+    bigintConversion.hexToBigint(epoch.slice(2)),
+    xShare,
+    SPAM_THRESHOLD
+  );
 
   const request: RedirectMessage = {
     proof: fullProof.proof,
@@ -59,12 +50,8 @@ const visitApp = async (
     rlnIdentifier: rlnIdentifier.toString(),
   };
 
-  const res = await axios.post(
-    `${RATE_LIMITING_SERVER_BASE_URL}/users/access`,
-    request
-  );
-
-  return res.data;
+  const res = await accessApp(request)
+  return res;
 };
 
-export { registerToInterRep, visitApp, getWitness };
+export {  visitApp };

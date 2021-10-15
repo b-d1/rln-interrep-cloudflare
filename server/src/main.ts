@@ -6,7 +6,7 @@ import { userRouter, appRouter } from "./api";
 
 const PORT = 8080;
 
-const interRepSync = async (interval: number = 20 * 1000) => {
+const interRepSync = async (interval: number = 10 * 1000) => {
   console.log("fetching data...")
   await syncLeaves();
   setInterval( async () => {

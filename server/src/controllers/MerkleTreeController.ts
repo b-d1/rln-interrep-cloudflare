@@ -5,7 +5,6 @@ import {
 } from "../models/MerkleTree/MerkleTree.model";
 import { IMerkleTreeNodeDocument } from "../models/MerkleTree/MerkleTree.types";
 import poseidonHash from "../utils/hasher";
-const Tree = require("incrementalquintree/build/IncrementalQuinTree");
 
 const MERKLE_TREE_LEVELS = 15;
 
@@ -19,13 +18,27 @@ const checkGroup = async (groupId: string): Promise<boolean> => {
 
 class MerkleTreeController {
 
-  public updateTree = async (): Promise<boolean> => {
-    const leaves = await MerkleTreeNode.findAllLeaves();
-    const leavesData: Record<string, string>[] = leaves.map(leaf => { return {"groupId": leaf.key.groupId, "commitment":  leaf.hash}});
+  public updateTree = async (groupId: string): Promise<boolean> => {
+    const leaves = await MerkleTreeNode.findAllLeavesByGroup(groupId);
+    const leavesData: Record<string, string>[] = leaves.map(leaf => {
 
-    await MerkleTreeNode.remove({});
-    const leavesAfterRemoved = await MerkleTreeNode.findAllLeaves();
-    console.log("leaves after removed", leavesAfterRemoved.length);
+      const leafData = {
+        "groupId": leaf.key.groupId,
+        "commitment": leaf.hash
+      };
+
+      if(leaf.banned) {
+        leafData.commitment = BigInt(0).toString();
+      }
+      return leafData;
+
+    });
+
+    await MerkleTreeNode.deleteMany({"key.groupId": groupId});
+    const leavesAfterRemovedGroup = await MerkleTreeNode.getNumberOfNodes(groupId, 0);
+    const leavesAfterRemovedTotal = await MerkleTreeNode.getTotalNumberOfLeaves();
+    console.log("leaves after removed (group, total): ", leavesAfterRemovedGroup, leavesAfterRemovedTotal);
+    console.log("leaves to add:", leavesData);
     return await this.addLeaves(leavesData);
 
 
@@ -43,7 +56,7 @@ class MerkleTreeController {
 
     const root: string = "";
     for (const id of ids) {
-      await this.appendLeaf(id.groupId, id.commitment);
+      await this.appendLeaf(id.groupId, id.commitment, true);
     }
 
     return true;
@@ -68,21 +81,23 @@ class MerkleTreeController {
       );
     }
     node.banned = true;
-    node.hash = poseidonHash([BigInt(0)]).toString();
     await node.save();
     return node.key.index;
   };
 
   public appendLeaf = async (
     groupId: string,
-    idCommitment: string
+    idCommitment: string,
+    isUpdate: boolean = false
   ): Promise<string> => {
     if (!checkGroup(groupId)) {
       throw new Error(`The group ${groupId} does not exist`);
     }
 
-    if (await MerkleTreeNode.findByGroupIdAndHash(groupId, idCommitment)) {
-      throw new Error(`The identity commitment ${idCommitment} already exist`);
+    if(!isUpdate || idCommitment !== BigInt(0).toString()) {
+      if (await MerkleTreeNode.findByGroupIdAndHash(groupId, idCommitment)) {
+        throw new Error(`The identity commitment ${idCommitment} already exist`);
+      }
     }
 
     // Get the zero hashes.
