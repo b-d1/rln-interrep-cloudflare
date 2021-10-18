@@ -38,7 +38,7 @@ class RLNController {
     return NRLN.genSignalHash(signal).toString();
   };
 
-  public removeUser = async (message: RedirectMessage) => {
+  public removeUser = async (message: RedirectMessage): Promise<string> => {
     const requestStats = await RequestStats.getSharesForEpochForUser(
       getHostFromUrl(message.url),
       message.epoch,
@@ -56,18 +56,21 @@ class RLNController {
 
     const idCommitment = poseidonHash([pKey]).toString();
 
-    await this.merkleTreeController.banUser(
-      message.groupId,
-      idCommitment
-    );
+    const treeNode = await MerkleTreeNode.findLeafByGroupIdAndHash(message.groupId, idCommitment);
+
+    if(!treeNode) {
+      throw new Error("Invalid user removal, the user doesn't exists");
+    }
 
     // for accounting/metadata purposes
     const bannedUser = new BannedUser({
       idCommitment,
+      leafIndex: treeNode.key.index,
       secret: pKey.toString(),
     });
 
     await bannedUser.save();
+    return idCommitment
   };
 
   public verifyRlnProof = async (

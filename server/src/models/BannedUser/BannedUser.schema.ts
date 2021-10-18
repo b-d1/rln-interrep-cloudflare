@@ -8,7 +8,8 @@ import {
 
 const BannedUserSchemaFields: Record<keyof IBannedUser, any> = {
   idCommitment: { type: String, required: true, unique: true },
-  secret: { type: Number, default: false },
+  leafIndex: {type: Number, required: true, unique: false },
+  secret: { type: String, required: true, unique: true },
 };
 
 const UserSchema = new Schema<IBannedUserDocument, IBannedUserModel>(

@@ -1,7 +1,7 @@
 import { Schema } from "mongoose";
 import {
   findByLevelAndIndex,
-  findByGroupIdAndHash,
+  findLeafByGroupIdAndHash,
   findZeroes,
   getNumberOfNodes,
   findAllLeaves,
@@ -45,7 +45,7 @@ export const MerkleTreeNodeSchema = new Schema<
 >(MerkleTreeNodeSchemaFields);
 
 MerkleTreeNodeSchema.statics.findByLevelAndIndex = findByLevelAndIndex;
-MerkleTreeNodeSchema.statics.findByGroupIdAndHash = findByGroupIdAndHash;
+MerkleTreeNodeSchema.statics.findLeafByGroupIdAndHash = findLeafByGroupIdAndHash;
 MerkleTreeNodeSchema.statics.getNumberOfNodes = getNumberOfNodes;
 MerkleTreeNodeSchema.statics.findAllLeavesByGroup = findAllLeavesByGroup;
 MerkleTreeNodeSchema.statics.findAllLeaves = findAllLeaves;

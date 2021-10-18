@@ -38,8 +38,9 @@ router.post("/access", async (req, res) => {
     res.redirect(307, `${redirectMessage.url}?key=${ACCESS_KEY}`);
   } else {
     if (status === RedirectVerificationStatus.SPAM) {
-      await rlnController.removeUser(redirectMessage);
-      await merkleTreeController.updateTree(redirectMessage.groupId);
+      const idCommitment = await rlnController.removeUser(redirectMessage);
+
+      await merkleTreeController.updateLeaf(redirectMessage.groupId, idCommitment);
     }
 
     res.json({ error: "Invalid verification", status });

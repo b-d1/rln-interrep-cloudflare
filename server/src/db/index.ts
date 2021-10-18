@@ -2,7 +2,7 @@ import { connect } from "mongoose";
 import { MerkleTreeNode } from "../models/MerkleTree/MerkleTree.model";
 
 const initDb = async () => {
-  await connect("mongodb://root:example@localhost:27017");
+  await connect("mongodb://localhost:27017");
 };
 
 const testNodeInsert = async () => {

@@ -3,6 +3,7 @@ import {getTotalBannedUsers} from "./BannedUser.statics"
 
 export interface IBannedUser {
   idCommitment: string;
+  leafIndex: number;
   secret: string;
 }
 

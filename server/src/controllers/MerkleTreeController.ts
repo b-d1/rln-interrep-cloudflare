@@ -3,7 +3,7 @@ import {
   MerkleTreeNode,
   MerkleTreeZero,
 } from "../models/MerkleTree/MerkleTree.model";
-import { IMerkleTreeNodeDocument } from "../models/MerkleTree/MerkleTree.types";
+import { IMerkleTreeNode, IMerkleTreeNodeDocument } from "../models/MerkleTree/MerkleTree.types";
 import poseidonHash from "../utils/hasher";
 
 const MERKLE_TREE_LEVELS = 15;
@@ -17,32 +17,6 @@ const checkGroup = async (groupId: string): Promise<boolean> => {
 };
 
 class MerkleTreeController {
-
-  public updateTree = async (groupId: string): Promise<boolean> => {
-    const leaves = await MerkleTreeNode.findAllLeavesByGroup(groupId);
-    const leavesData: Record<string, string>[] = leaves.map(leaf => {
-
-      const leafData = {
-        "groupId": leaf.key.groupId,
-        "commitment": leaf.hash
-      };
-
-      if(leaf.banned) {
-        leafData.commitment = BigInt(0).toString();
-      }
-      return leafData;
-
-    });
-
-    await MerkleTreeNode.deleteMany({"key.groupId": groupId});
-    const leavesAfterRemovedGroup = await MerkleTreeNode.getNumberOfNodes(groupId, 0);
-    const leavesAfterRemovedTotal = await MerkleTreeNode.getTotalNumberOfLeaves();
-    console.log("leaves after removed (group, total): ", leavesAfterRemovedGroup, leavesAfterRemovedTotal);
-    console.log("leaves to add:", leavesData);
-    return await this.addLeaves(leavesData);
-
-
-  };
 
   public syncTree = async (
     groupId: string,
@@ -63,28 +37,6 @@ class MerkleTreeController {
 
   }
 
-  public banUser = async (
-    groupId: string,
-    idCommitment: string
-  ): Promise<number> => {
-    if (!checkGroup(groupId)) {
-      throw new Error(`The group ${groupId} does not exist`);
-    }
-    const node = await MerkleTreeNode.findByGroupIdAndHash(
-      groupId,
-      idCommitment
-    );
-
-    if (!node) {
-      throw new Error(
-        `The user with identity commitment ${idCommitment} doesn't exists`
-      );
-    }
-    node.banned = true;
-    await node.save();
-    return node.key.index;
-  };
-
   public appendLeaf = async (
     groupId: string,
     idCommitment: string,
@@ -95,7 +47,7 @@ class MerkleTreeController {
     }
 
     if(!isUpdate || idCommitment !== BigInt(0).toString()) {
-      if (await MerkleTreeNode.findByGroupIdAndHash(groupId, idCommitment)) {
+      if (await MerkleTreeNode.findLeafByGroupIdAndHash(groupId, idCommitment)) {
         throw new Error(`The identity commitment ${idCommitment} already exist`);
       }
     }
@@ -188,6 +140,43 @@ class MerkleTreeController {
     return node.hash;
   };
 
+  public updateLeaf = async (groupId: string, leafHash: string, newValue: string = ZERO_VALUE.toString()) => {
+    let node = await MerkleTreeNode.findLeafByGroupIdAndHash(
+      groupId,
+      leafHash
+    );
+
+    if (!node) {
+      throw new Error(
+        `The user with identity commitment ${leafHash} doesn't exists`
+      );
+    }
+
+    node.hash = newValue;
+    await node.save();
+
+    while(node && node.parent) {
+
+      const nodeIndex = node.key.index;
+      const siblingHash = BigInt(node.siblingHash as string);
+      const nodeHash = BigInt(node.hash);
+
+      const parent = await MerkleTreeNode.findByLevelAndIndex({
+        groupId,
+        level: node.key.level + 1,
+        index: Math.floor(nodeIndex / 2),
+      });
+
+      const childrenHashes = nodeIndex % 2 === 0 ? [nodeHash, siblingHash] : [siblingHash, nodeHash];
+      parent.hash = poseidonHash(childrenHashes).toString();
+
+      await parent.save();
+      node = parent;
+    }
+
+  };
+
+
 
   public retrievePath = async (
     groupId: string,
@@ -198,7 +187,7 @@ class MerkleTreeController {
     }
 
     // Get path starting from leaf node.
-    const leafNode = await MerkleTreeNode.findByGroupIdAndHash(
+    const leafNode = await MerkleTreeNode.findLeafByGroupIdAndHash(
       groupId,
       idCommitment
     );

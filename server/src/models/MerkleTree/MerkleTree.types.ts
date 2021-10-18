@@ -1,7 +1,7 @@
 import { Model, Document } from "mongoose";
 import {
   findByLevelAndIndex,
-  findByGroupIdAndHash,
+  findLeafByGroupIdAndHash,
   findZeroes,
   getNumberOfNodes,
   findAllLeavesByGroup,
@@ -28,7 +28,7 @@ export interface IMerkleTreeNodeDocument extends IMerkleTreeNode, Document {}
 
 export interface IMerkleTreeNodeModel extends Model<IMerkleTreeNodeDocument> {
   findByLevelAndIndex: typeof findByLevelAndIndex;
-  findByGroupIdAndHash: typeof findByGroupIdAndHash;
+  findLeafByGroupIdAndHash: typeof findLeafByGroupIdAndHash;
   getNumberOfNodes: typeof getNumberOfNodes;
   findAllLeavesByGroup: typeof findAllLeavesByGroup;
   findAllLeaves: typeof findAllLeaves;
