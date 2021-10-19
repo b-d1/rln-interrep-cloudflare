@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as fs from "fs";
+import config from "../config"
 
 import RequestStats from "../models/RequestStats/RequestStats.model";
 
@@ -16,7 +17,6 @@ import poseidonHash from "../utils/hasher";
 import { MerkleTreeNode } from "../models/MerkleTree/MerkleTree.model";
 
 class RLNController {
-  spamThreshold: number = 3;
   merkleTreeController: MerkleTreeController;
   messageController: MessageController;
   verifierKey: any;
@@ -105,7 +105,7 @@ class RLNController {
     }
 
     if (
-      await this.messageController.isSpam(redirectMessage, this.spamThreshold)
+      await this.messageController.isSpam(redirectMessage, config.SPAM_TRESHOLD)
     ) {
       return RedirectVerificationStatus.SPAM;
     }

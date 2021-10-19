@@ -1,3 +1,9 @@
+enum SocketEventType {
+  USER_REGISTERED = "userRegistered", // event emitted by the server to all of the clients when new user registers successfully
+  USER_SLASHED = "userSlashed", // event emitted by the server to the clients when user is slashed
+  GET_WITNESS = "getWitness", // event emitted by the clients when they need to obtain a new witness (when new user is added or user is slashed)
+}
+
 enum RedirectVerificationStatus {
   DUPLICATE = "duplicate", // the redirect is duplicate, we should not process it further
   SPAM = "spam", // the redirect is considered as spam, the user should be slashed
@@ -16,4 +22,4 @@ interface RedirectMessage {
   rlnIdentifier: string;
 }
 
-export { RedirectMessage, RedirectVerificationStatus };
+export { RedirectMessage, RedirectVerificationStatus, SocketEventType };

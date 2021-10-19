@@ -5,11 +5,7 @@
 This repository is work in progress.
 
 TODO items:
-
-- Refactoring across all the packages (including using the new semaphore lib)
-- Implementing better synchronisation logic with InterRep
 - Improving upon the RLN construct to treat duplicate messages per epoch as spam too 
-- Changing the merkle tree implementation for the RLN part and the witness verification part of the RLN construct, according to the new merkle tree structure (to be determined)
 
 ### Prerequisites
 
@@ -32,6 +28,12 @@ Then run the apps:
 4. `yarn client` # single client simulation
 5. `yarn multiClient` # multi client simulation
 
+extra (simulate multiple separate clients in real time):
+
+6. `yarn user1` # normal user
+6. `yarn user2` # user that spams
+6. `yarn user3` # normal user from other group
+
 
 ### Description
 
@@ -46,8 +48,11 @@ There are 4 different components:
 - Apps - applications protected by the Rate limiting service (need to register to the rate limiting service for protection first)
 - Users
 
-The rate limiting service synchronizes the membership tree from the InterRep service, and it holds the same tree. Currently a mock app for the InterRep service is used that stores two semaphore groups. Currently the synchronization with the InterRep membership tree happens periodically (on a preset time interval), by reading the newly added identity commitments, for which the Rate Limiting service is unaware of. This can be improved by adding a smart contract event listener which listens for `NewRootHash` events from the `InterRepGroups` contract.
+The rate limiting service synchronizes the membership tree from the InterRep service. Currently a mock app for the InterRep service is used that stores two semaphore groups. The synchronization with the InterRep membership tree happens periodically (on a preset time interval), by reading the newly added identity commitments, for which the Rate Limiting service is unaware of. This can be improved by adding a smart contract event listener which listens for `NewRootHash` events from the `InterRepGroups` contract.
 The rate limiting service keeps it's own merkle tree, which contains all of the identity commitments from the InterRep's merkle tree. Once a user is banned, the merkle tree in the rate limiting service is modified (only the merkle tree for the group in which the banned user is part of), the leaf for the banned user is zeroed out. If the banned user tries to send new request, they will be blocked by the rate limiting service, because their proof will be invalid. The tree in the InterRep service is not modified in any way.
 
+The connected users to the rate limiting service will get notifications via websockets (SocketIO) when a new user is registered to their group or a user is slashed. The clients can use these notifications to obtain a new witness from the RL service, in order to be able to generate valid proofs.
 
 For more details around the idea, please refer to: https://ethresear.ch/t/decentralised-cloudflare-using-rln-and-rich-user-identities/10774
+
+For the details about InterRep <-> RLN integration and tree syncing, please read the following doc: https://hackmd.io/@aeAuSD7mSCKofwwx445eAQ/SJpo9rwrt.

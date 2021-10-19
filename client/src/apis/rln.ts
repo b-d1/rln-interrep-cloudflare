@@ -1,26 +1,27 @@
 import * as path from "path";
-import axios from "axios";
 import { NRLN } from "semaphore-lib";
-import { RedirectMessage } from "./types";
+import { RedirectMessage } from "../utils/types";
 import * as bigintConversion from "bigint-conversion";
-import {accessApp} from "./requests"
+import { accessApp } from "../utils/requests"
 const PROVER_KEY_PATH: string = path.join("./circuitFiles", "rln_final.zkey");
 const CIRCUIT_PATH: string = path.join("./circuitFiles", "rln.wasm");
 
-const RATE_LIMITING_SERVER_BASE_URL = "http://localhost:8080";
-const INTERREP_API_BASE_URL = "http://localhost:8084";
-
 const SPAM_THRESHOLD = 3;
 
+const getEpoch = () => {
+  // For PoC purposes only, in real life apps the epoch will be obtained
+  // in a deterministic manner and the client and the server will be synchronised.
+  return "test-epoch";
+};
 
-const visitApp = async (
+const generateRequest = async (
   identitySecret: bigint[],
   witness: any,
   rlnIdentifier: bigint,
   interRepGroup: string,
   epoch: string,
   url: string
-) => {
+): Promise<RedirectMessage> => {
   epoch = NRLN.genExternalNullifier(epoch);
   const fullProof = await NRLN.genProofFromBuiltTree(
     identitySecret,
@@ -49,9 +50,8 @@ const visitApp = async (
     groupId: interRepGroup,
     rlnIdentifier: rlnIdentifier.toString(),
   };
+  return request;
 
-  const res = await accessApp(request)
-  return res;
 };
 
-export {  visitApp };
+export { generateRequest, getEpoch };

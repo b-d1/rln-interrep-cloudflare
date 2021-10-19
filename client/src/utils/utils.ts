@@ -19,4 +19,8 @@ const deserializeWitness = (witness) => {
   return witness;
 };
 
-export { serializeWitness, deserializeWitness };
+const sleep = async (intervalSeconds: number = 15) => {
+  await new Promise((r) => setTimeout(r, intervalSeconds * 1000));
+};
+
+export { serializeWitness, deserializeWitness, sleep };

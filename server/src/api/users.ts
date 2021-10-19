@@ -1,7 +1,5 @@
 import express from "express";
-import { Server } from "socket.io";
-import { RedirectVerificationStatus, RedirectMessage } from "../utils/types";
-import { syncLeaves } from "../utils/seed";
+import { RedirectVerificationStatus, RedirectMessage, SocketEventType } from "../utils/types";
 import App from "../models/App/App.model";
 
 import {
@@ -10,9 +8,6 @@ import {
   merkleTreeController,
 } from "../controllers";
 const router = express.Router();
-
-// ACCESS_KEY is used just for demo purposes, more sophisticated implementation to be done`
-const ACCESS_KEY = "1234";
 
 router.post("/access", async (req, res) => {
 
@@ -35,12 +30,16 @@ router.post("/access", async (req, res) => {
       rlnController.genSignalHash(redirectMessage.url)
     );
 
-    res.redirect(307, `${redirectMessage.url}?key=${ACCESS_KEY}`);
+    res.redirect(307, `${redirectMessage.url}?key=${app.accessKey}`);
   } else {
     if (status === RedirectVerificationStatus.SPAM) {
       const idCommitment = await rlnController.removeUser(redirectMessage);
 
       await merkleTreeController.updateLeaf(redirectMessage.groupId, idCommitment);
+
+      const socketIo = req.app.get('socketio');
+
+      socketIo.emit(SocketEventType.USER_SLASHED, redirectMessage.groupId, idCommitment);
     }
 
     res.json({ error: "Invalid verification", status });

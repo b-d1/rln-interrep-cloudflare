@@ -26,6 +26,7 @@ router.get("/:name", async (req, res) => {
 router.post("/register", async (req, res) => {
   const url = new URL(req.body.url);
   const name = req.body.name;
+  const accessKey = req.body.accessKey;
   const host = url.host;
 
   const appExists = await App.findOne({ name });
@@ -36,6 +37,7 @@ router.post("/register", async (req, res) => {
       name,
       host,
       url,
+      accessKey
     });
 
     await app.save();

@@ -64,6 +64,7 @@ const reigster = async (): Promise<boolean> => {
     const appBody = {
       url: APP_BASE_URL,
       name: APP_NAME,
+      accessKey: ACCESS_KEY
     };
 
     result = await axios.post(

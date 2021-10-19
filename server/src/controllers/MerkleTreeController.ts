@@ -1,20 +1,12 @@
+import config from "../config"
 import Group from "../models/group/Group.model";
 import {
   MerkleTreeNode,
   MerkleTreeZero,
 } from "../models/MerkleTree/MerkleTree.model";
-import { IMerkleTreeNode, IMerkleTreeNodeDocument } from "../models/MerkleTree/MerkleTree.types";
+import { IMerkleTreeNodeDocument } from "../models/MerkleTree/MerkleTree.types";
 import poseidonHash from "../utils/hasher";
 
-const MERKLE_TREE_LEVELS = 15;
-
-// Zero value complies with the InterRep semaphore groups
-const ZERO_VALUE = BigInt(0);
-
-const checkGroup = async (groupId: string): Promise<boolean> => {
-  const group = await Group.findOne({ groupId });
-  return group ? true : false;
-};
 
 class MerkleTreeController {
 
@@ -28,7 +20,6 @@ class MerkleTreeController {
 
   private addLeaves = async (ids: Record<string, string>[]) => {
 
-    const root: string = "";
     for (const id of ids) {
       await this.appendLeaf(id.groupId, id.commitment, true);
     }
@@ -42,7 +33,7 @@ class MerkleTreeController {
     idCommitment: string,
     isUpdate: boolean = false
   ): Promise<string> => {
-    if (!checkGroup(groupId)) {
+    if (!(await Group.findOne({ groupId }))) {
       throw new Error(`The group ${groupId} does not exist`);
     }
 
@@ -62,7 +53,7 @@ class MerkleTreeController {
     // Get next available index at level 0.
     let currentIndex = await MerkleTreeNode.getNumberOfNodes(groupId, 0);
 
-    if (currentIndex >= 2 ** MERKLE_TREE_LEVELS) {
+    if (currentIndex >= 2 ** config.MERKLE_TREE_LEVELS) {
       throw new Error(`The tree is full`);
     }
 
@@ -71,7 +62,7 @@ class MerkleTreeController {
       hash: idCommitment,
     });
 
-    for (let level = 0; level < MERKLE_TREE_LEVELS; level++) {
+    for (let level = 0; level < config.MERKLE_TREE_LEVELS; level++) {
       if (currentIndex % 2 === 0) {
         node.siblingHash = zeroes[level].hash;
 
@@ -140,7 +131,7 @@ class MerkleTreeController {
     return node.hash;
   };
 
-  public updateLeaf = async (groupId: string, leafHash: string, newValue: string = ZERO_VALUE.toString()) => {
+  public updateLeaf = async (groupId: string, leafHash: string, newValue: string = config.ZERO_VALUE.toString()) => {
     let node = await MerkleTreeNode.findLeafByGroupIdAndHash(
       groupId,
       leafHash
@@ -182,7 +173,7 @@ class MerkleTreeController {
     groupId: string,
     idCommitment: string
   ): Promise<any> => {
-    if (!checkGroup(groupId)) {
+    if (!( await Group.findOne({ groupId }))) {
       throw new Error(`The group ${groupId} does not exist`);
     }
 
