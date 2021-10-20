@@ -1,11 +1,13 @@
 import { Model, Document } from "mongoose";
 import {
   findByLevelAndIndex,
-  findByGroupIdAndHash,
+  findLeafByGroupIdAndHash,
   findZeroes,
   getNumberOfNodes,
-  findAllLeafsByGroup,
-  getLatest,
+  findAllLeavesByGroup,
+  findAllLeaves,
+  findRoot,
+  getTotalNumberOfLeaves
 } from "./MerkleTree.statics";
 
 export interface IMerkleTreeNodeKey {
@@ -26,9 +28,12 @@ export interface IMerkleTreeNodeDocument extends IMerkleTreeNode, Document {}
 
 export interface IMerkleTreeNodeModel extends Model<IMerkleTreeNodeDocument> {
   findByLevelAndIndex: typeof findByLevelAndIndex;
-  findByGroupIdAndHash: typeof findByGroupIdAndHash;
+  findLeafByGroupIdAndHash: typeof findLeafByGroupIdAndHash;
   getNumberOfNodes: typeof getNumberOfNodes;
-  findAllLeafsByGroup: typeof findAllLeafsByGroup;
+  findAllLeavesByGroup: typeof findAllLeavesByGroup;
+  findAllLeaves: typeof findAllLeaves;
+  findRoot: typeof findRoot;
+  getTotalNumberOfLeaves: typeof getTotalNumberOfLeaves;
 }
 
 export interface IMerkleTreeZero {
@@ -40,14 +45,4 @@ export interface IMerkleTreeZeroDocument extends IMerkleTreeZero, Document {}
 
 export interface IMerkleTreeZeroModel extends Model<IMerkleTreeZeroDocument> {
   findZeroes: typeof findZeroes;
-}
-
-export interface IMerkleTreeRoot {
-  hash: string;
-}
-
-export interface IMerkleTreeRootDocument extends IMerkleTreeRoot, Document {}
-
-export interface IMerkleTreeRootModel extends Model<IMerkleTreeRootDocument> {
-  getLatest: typeof getLatest;
 }

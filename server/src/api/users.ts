@@ -1,7 +1,5 @@
 import express from "express";
-import { Server } from "socket.io";
-import { RedirectVerificationStatus, RedirectMessage } from "../utils/types";
-// import { syncLeaves } from "../utils/seed";
+import { RedirectVerificationStatus, RedirectMessage, SocketEventType } from "../utils/types";
 import App from "../models/App/App.model";
 
 import {
@@ -12,8 +10,6 @@ import {
 const router = express.Router();
 
 router.post("/access", async (req, res) => {
-  // TODO: remove syncing before access, create a separate background syncing process
-  // await syncLeaves();
 
   const redirectMessage: RedirectMessage = req.body as RedirectMessage;
 
@@ -31,20 +27,37 @@ router.post("/access", async (req, res) => {
   if (status === RedirectVerificationStatus.VALID) {
     await messageController.registerValidMessage(
       redirectMessage,
-      rlnController.genSignalHash(redirectMessage.url)
+      rlnController.genSignalHashString(redirectMessage.url)
     );
 
-    // ACCESS_KEY is used just for demo purposes, more sophisticated implementation to be done
-
-    res.redirect(307, `${redirectMessage.url}?key=${process.env.ACCESS_KEY}`);
+    res.redirect(307, `${redirectMessage.url}?key=${app.accessKey}`);
   } else {
     if (status === RedirectVerificationStatus.SPAM) {
-      await rlnController.removeUser(redirectMessage);
-      await merkleTreeController.updateLatestRoot(redirectMessage.groupId);
+      const idCommitment = await rlnController.removeUser(redirectMessage);
+
+      await merkleTreeController.updateLeaf(redirectMessage.groupId, idCommitment);
+
+      const socketIo = req.app.get('socketio');
+
+      socketIo.emit(SocketEventType.USER_SLASHED, redirectMessage.groupId, idCommitment);
     }
 
     res.json({ error: "Invalid verification", status });
   }
 });
+
+router.get("/witness/:groupId/:idCommitment", async (req, res) => {
+
+  const groupId = req.params.groupId;
+  const idCommitment = req.params.idCommitment;
+
+  try {
+    const witness = await merkleTreeController.retrievePath(groupId, idCommitment)
+    res.json({data: witness});
+  } catch (e: any) {
+    res.status(400).json({error: e.message})
+  }
+
+})
 
 export default router;

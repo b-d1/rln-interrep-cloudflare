@@ -1,20 +1,24 @@
+// import { NRLN, IProof } from "semaphore-lib";
+import { NRln, genSignalHash, IProof } from "@libsem/protocols"
 import * as path from "path";
 import * as fs from "fs";
 
+import config from "../config"
+
 import RequestStats from "../models/RequestStats/RequestStats.model";
 
-import { RLN, IProof } from "semaphore-lib";
 import { RedirectMessage, RedirectVerificationStatus } from "../utils/types";
 
 import { getHostFromUrl } from "../utils/utils";
 import BannedUser from "../models/BannedUser/BannedUser.model";
 
 import MerkleTreeController from "./MerkleTreeController";
-import { MerkleTreeRoot } from "../models/MerkleTree/MerkleTree.model";
 import MessageController from "./MessageController";
 
+import poseidonHash from "../utils/hasher";
+import { MerkleTreeNode } from "../models/MerkleTree/MerkleTree.model";
+
 class RLNController {
-  spamThreshold: number = parseInt(process.env.SPAM_TRESHOLD as string, 10);
   merkleTreeController: MerkleTreeController;
   messageController: MessageController;
   verifierKey: any;
@@ -25,18 +29,17 @@ class RLNController {
   ) {
     this.merkleTreeController = treeController;
     this.messageController = msgController;
-    RLN.setHasher("poseidon");
 
     const keyPath = path.join("./circuitFiles/rln", "verification_key.json");
 
     this.verifierKey = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
   }
 
-  public genSignalHash = (signal: string): string => {
-    return RLN.genSignalHash(signal).toString();
+  public genSignalHashString = (signal: string): string => {
+    return genSignalHash(signal).toString();
   };
 
-  public removeUser = async (message: RedirectMessage) => {
+  public removeUser = async (message: RedirectMessage): Promise<string> => {
     const requestStats = await RequestStats.getSharesForEpochForUser(
       getHostFromUrl(message.url),
       message.epoch,
@@ -46,29 +49,28 @@ class RLNController {
     const sharesX = requestStats.map((stats) => BigInt(stats.xShare));
     const sharesY = requestStats.map((stats) => BigInt(stats.yShare));
 
-    const pKey = RLN.retrievePrivateKey(
-      sharesX[0],
-      RLN.genSignalHash(message.url),
-      sharesY[0],
-      BigInt(message.yShare)
-    );
+      sharesX.push(genSignalHash(message.url));
+      sharesY.push(BigInt(message.yShare));
 
-    // const idCommitment = NRLN.genIdentityCommitment([pKey]).toString(); // generate identity commitment from private key
-    const idCommitment = RLN.genIdentityCommitment(pKey).toString(); // generate identity commitment from private key
+    const secret: bigint = NRln.retrieveSecret(sharesX, sharesY);
 
-    const leafIndex = await this.merkleTreeController.banUser(
-      message.groupId,
-      idCommitment
-    );
+    const idCommitment = poseidonHash([secret]).toString();
+
+    const treeNode = await MerkleTreeNode.findLeafByGroupIdAndHash(message.groupId, idCommitment);
+
+    if(!treeNode) {
+      throw new Error("Invalid user removal, the user doesn't exists");
+    }
 
     // for accounting/metadata purposes
     const bannedUser = new BannedUser({
       idCommitment,
-      leafIndex,
-      secret: pKey.toString(),
+      leafIndex: treeNode.key.index,
+      secret: secret.toString(),
     });
 
-    bannedUser.save();
+    await bannedUser.save();
+    return idCommitment
   };
 
   public verifyRlnProof = async (
@@ -77,34 +79,33 @@ class RLNController {
     if (
       await this.messageController.isDuplicate(
         redirectMessage,
-        this.genSignalHash(redirectMessage.url)
+        this.genSignalHashString(redirectMessage.url)
       )
     )
       return RedirectVerificationStatus.DUPLICATE;
 
-    const latestRoot = await MerkleTreeRoot.getLatest();
-    if (!latestRoot) return RedirectVerificationStatus.INVALID;
+    const root = await MerkleTreeNode.findRoot(redirectMessage.groupId);
+    if (!root) return RedirectVerificationStatus.INVALID;
 
     const proof: IProof = {
       proof: redirectMessage.proof,
       publicSignals: [
         BigInt(redirectMessage.yShare),
-        BigInt(latestRoot.hash),
+        BigInt(root.hash),
         BigInt(redirectMessage.nullifier),
-        RLN.genSignalHash(redirectMessage.url),
-        redirectMessage.epoch,
-        BigInt(redirectMessage.rlnIdentifier),
+        genSignalHash(redirectMessage.url),
+        redirectMessage.epoch
       ],
     };
 
-    const status = await RLN.verifyProof(this.verifierKey, proof);
+    const status = await NRln.verifyProof(this.verifierKey, proof);
 
     if (!status) {
       return RedirectVerificationStatus.INVALID;
     }
 
     if (
-      await this.messageController.isSpam(redirectMessage, this.spamThreshold)
+      await this.messageController.isSpam(redirectMessage, config.SPAM_TRESHOLD)
     ) {
       return RedirectVerificationStatus.SPAM;
     }

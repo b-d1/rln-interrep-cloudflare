@@ -3,8 +3,9 @@ import http from "http";
 import { syncLoop } from "./interrep_sync";
 import { initDb } from "./db";
 import { userRouter, appRouter } from "./api";
-import {merkleTreeController} from "./controllers";
+import { seed } from "./utils/seed";
 import dotenv from 'dotenv';
+import {initServer, setSocketListeners } from "./sockets"
 
 dotenv.config();
 
@@ -15,9 +16,14 @@ const main = async () => {
   const server = http.createServer(app);
 
   await initDb();
-  // seed zeroes if necessary
-  await merkleTreeController.seedZeros()
+  // seed db if necessary
+  await seed();
+  const socketIo = await initServer(server);
 
+  setSocketListeners(socketIo);
+  syncLoop(socketIo);
+
+  app.set('socketio', socketIo);
   app.use(express.json());
 
   app.use("/users", userRouter);
@@ -30,8 +36,6 @@ const main = async () => {
   server.listen(process.env.SERVER_PORT, () => {
     console.log(`Rate limiting service running on: ${process.env.SERVER_PORT}`);
   });
-
-  syncLoop();
 
 };
 

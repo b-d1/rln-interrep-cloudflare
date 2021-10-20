@@ -1,27 +1,28 @@
+import {Server} from "socket.io"
+import config from "../config"
 import { merkleTreeController, groupController } from "../controllers";
 import {getInterRepLeaves, getInterrepGroups} from "../utils/requests"
+import { SocketEventType } from "../utils/types";
 
-
-const syncLoop = async () => {
+const syncLoop = async (socketIo: Server) => {
 
     // do an initial sync
-    await sync();
+    await sync(socketIo);
 
-    const syncInterval = parseInt(process.env.INTERREP_SYNC_INTERVAL_SECONDS as string, 10) * 1000;
+    const syncInterval = config.INTERREP_SYNC_INTERVAL_SECONDS * 1000;
     // start the loop
     setInterval(async () => {
-     await sync();
+     await sync(socketIo);
     }, syncInterval)
 
   }
 
-const sync = async () => {
+const sync = async (socketIo: Server) => {
     const groups = (await getInterrepGroups()).groups;
-    await syncGroups(groups);
-
+    await syncGroups(socketIo, groups);
 };
 
-const syncGroups = async (groups) => {
+const syncGroups = async (socketIo: Server, groups) => {
     for(const group of groups) {
         const groupId = group.id;
         const numLeaves = parseInt(group.leafCount, 10);
@@ -29,12 +30,12 @@ const syncGroups = async (groups) => {
         if(!groupExists) {
             await groupController.addGroup(groupId)
         }
-        await syncGroup(groupId, numLeaves);
+        await syncGroup(socketIo, groupId, numLeaves);
     }
 }
 
 
-const syncGroup = async (groupId: string, leavesInGroup: number) => {
+const syncGroup = async (socketIo: Server, groupId: string, leavesInGroup: number) => {
     const numLeavesInDb = await merkleTreeController.getNumLeaves(groupId);
 
     // we're up to date, no sync needed
@@ -57,6 +58,8 @@ const syncGroup = async (groupId: string, leavesInGroup: number) => {
         const skip = numLeavesInDb + (fullChunksToFetch * leavesPerChunk);
         await syncLeaves(groupId, first, skip)
     }
+    socketIo.emit(SocketEventType.USER_REGISTERED, groupId);
+
 
 };
 

@@ -5,6 +5,7 @@ export interface IApp {
   name: string;
   host: string;
   url: string;
+  accessKey: string;
 }
 
 export interface IAppDocument extends IApp, Document {}

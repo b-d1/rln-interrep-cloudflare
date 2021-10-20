@@ -1,13 +1,11 @@
 import {
   MerkleTreeNode,
   MerkleTreeZero,
-  MerkleTreeRoot,
 } from "./MerkleTree.model";
 import {
   IMerkleTreeNodeDocument,
   IMerkleTreeNodeKey,
   IMerkleTreeZeroDocument,
-  IMerkleTreeRootDocument,
 } from "./MerkleTree.types";
 
 export async function findByLevelAndIndex(
@@ -17,13 +15,14 @@ export async function findByLevelAndIndex(
   return this.findOne({ key }).populate("parent");
 }
 
-export async function findByGroupIdAndHash(
+export async function findLeafByGroupIdAndHash(
   this: typeof MerkleTreeNode,
   groupId: string,
   hash: string
 ): Promise<IMerkleTreeNodeDocument | null> {
-  return this.findOne({ "key.groupId": groupId, hash }).populate("parent");
+  return this.findOne({ "key.groupId": groupId, "key.level": 0, hash }).populate("parent");
 }
+
 
 export async function getNumberOfNodes(
   this: typeof MerkleTreeNode,
@@ -33,21 +32,36 @@ export async function getNumberOfNodes(
   return this.countDocuments({ "key.groupId": groupId, "key.level": level });
 }
 
-export async function findAllLeafsByGroup(
+export async function findAllLeavesByGroup(
   this: typeof MerkleTreeNode,
   groupId: string
 ): Promise<IMerkleTreeNodeDocument[]> {
   return this.find({ "key.groupId": groupId, "key.level": 0 });
 }
 
+export async function findAllLeaves(
+  this: typeof MerkleTreeNode,
+): Promise<IMerkleTreeNodeDocument[]> {
+  return this.find({ "key.level": 0 });
+}
+
+export async function findRoot(
+  this: typeof MerkleTreeNode,
+  groupId: string
+): Promise<IMerkleTreeNodeDocument | null> {
+  return this.findOne({"key.level": 15, "key.index": 0, "key.groupId": groupId});
+}
+
+export async function getTotalNumberOfLeaves(
+  this: typeof MerkleTreeNode,
+): Promise<number> {
+  return this.countDocuments({ "key.level": 0 });
+}
+
+
+
 export async function findZeroes(
   this: typeof MerkleTreeZero
 ): Promise<IMerkleTreeZeroDocument[] | null> {
   return this.find();
-}
-
-export async function getLatest(
-  this: typeof MerkleTreeRoot
-): Promise<IMerkleTreeRootDocument | null> {
-  return this.findOne().sort({ _id: -1 });
 }

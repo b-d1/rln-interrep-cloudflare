@@ -1,6 +1,5 @@
 import Group from "../models/group/Group.model";
 
-
 class GroupController {
 
     public groupExists = async (groupId: string): Promise<boolean> => {

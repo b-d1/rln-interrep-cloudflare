@@ -1,18 +1,14 @@
+import config from "../config"
 import {
   MerkleTreeNode,
   MerkleTreeZero,
-  MerkleTreeRoot,
 } from "../models/MerkleTree/MerkleTree.model";
+import GroupController from "./GroupController";
 import { IMerkleTreeNodeDocument } from "../models/MerkleTree/MerkleTree.types";
 import poseidonHash from "../utils/hasher";
-import GroupController from "./GroupController";
-const Tree = require("incrementalquintree/build/IncrementalQuinTree");
 
-// Zero value complies with the InterRep semaphore groups zero value
-const ZERO_VALUE = BigInt(0);
 
 class MerkleTreeController {
-
 
   groupController: GroupController;
 
@@ -26,44 +22,22 @@ class MerkleTreeController {
     groupId: string,
     idCommitments: string[]
   ): Promise<boolean> => {
-    let root: string = "";
-    for (const idCommitment of idCommitments) {
-      root = await this.appendLeaf(groupId, idCommitment);
-    }
+    const leavesData = idCommitments.map(idCommitment => { return {"groupId": groupId, "commitment": idCommitment}});
+    return await this.addLeaves(leavesData);
+  };
 
-    const treeRoot = new MerkleTreeRoot({ hash: root });
-    treeRoot.save();
+  private addLeaves = async (ids: Record<string, string>[]) => {
+
+    for (const id of ids) {
+      await this.appendLeaf(id.groupId, id.commitment, true);
+    }
     return true;
-  };
-
-  public banUser = async (
-    groupId: string,
-    idCommitment: string
-  ): Promise<number> => {
-    const groupExists = await this.groupController.groupExists(groupId);
-
-    if (!groupExists) {
-      throw new Error(`The group ${groupId} does not exist`);
-    }
-
-    const node = await MerkleTreeNode.findByGroupIdAndHash(
-      groupId,
-      idCommitment
-    );
-
-    if (!node) {
-      throw new Error(
-        `The user with identity commitment ${idCommitment} doesn't exists`
-      );
-    }
-    node.banned = true;
-    await node.save();
-    return node.key.index;
-  };
+  }
 
   public appendLeaf = async (
     groupId: string,
-    idCommitment: string
+    idCommitment: string,
+    isUpdate: boolean = false
   ): Promise<string> => {
     const groupExists = await this.groupController.groupExists(groupId);
 
@@ -71,9 +45,10 @@ class MerkleTreeController {
       throw new Error(`The group ${groupId} does not exist`);
     }
 
-
-    if (await MerkleTreeNode.findByGroupIdAndHash(groupId, idCommitment)) {
-      throw new Error(`The identity commitment ${idCommitment} already exist`);
+    if(!isUpdate || idCommitment !== BigInt(0).toString()) {
+      if (await MerkleTreeNode.findLeafByGroupIdAndHash(groupId, idCommitment)) {
+        throw new Error(`The identity commitment ${idCommitment} already exist`);
+      }
     }
 
     // Get the zero hashes.
@@ -86,18 +61,16 @@ class MerkleTreeController {
     // Get next available index at level 0.
     let currentIndex = await MerkleTreeNode.getNumberOfNodes(groupId, 0);
 
-    const merkleTreeLevels = parseInt(process.env.MERKLE_TREE_LEVELS as string, 10);
-
-    if (currentIndex >= 2 ** merkleTreeLevels) {
+    if (currentIndex >= 2 ** config.MERKLE_TREE_LEVELS) {
       throw new Error(`The tree is full`);
     }
 
     let node: any = await MerkleTreeNode.create({
       key: { groupId, level: 0, index: currentIndex },
-      hash: idCommitment
+      hash: idCommitment,
     });
 
-    for (let level = 0; level < merkleTreeLevels; level++) {
+    for (let level = 0; level < config.MERKLE_TREE_LEVELS; level++) {
       if (currentIndex % 2 === 0) {
         node.siblingHash = zeroes[level].hash;
 
@@ -166,40 +139,44 @@ class MerkleTreeController {
     return node.hash;
   };
 
-  public updateLatestRoot = async (groupId: string): Promise<boolean> => {
-    const newRootHash = await this.previewNewRoot(groupId);
-    const newRoot = new MerkleTreeRoot({ hash: newRootHash });
-    await newRoot.save();
-    return true;
-  };
-
-  public previewNewRoot = async (groupId: string): Promise<string> => {
-    const groupExists = await this.groupController.groupExists(groupId);
-
-    if (!groupExists) {
-      throw new Error(`The group ${groupId} does not exist`);
-    }
-
-
-    const leafNodes = await MerkleTreeNode.findAllLeafsByGroup(groupId);
-    const tree = new Tree.IncrementalQuinTree(
-      parseInt(process.env.MERKLE_TREE_LEVELS as string, 10),
-      ZERO_VALUE,
-      2,
-      poseidonHash
+  public updateLeaf = async (groupId: string, leafHash: string, newValue: string = config.ZERO_VALUE.toString()) => {
+    let node = await MerkleTreeNode.findLeafByGroupIdAndHash(
+      groupId,
+      leafHash
     );
 
-    for (const leafNode of leafNodes) {
-      if (!leafNode.banned) {
-        tree.insert(BigInt(leafNode.hash));
-      } else {
-        tree.insert(poseidonHash([ZERO_VALUE]));
-      }
+    if (!node) {
+      throw new Error(
+        `The user with identity commitment ${leafHash} doesn't exists`
+      );
     }
-    return tree.root.toString();
+
+    node.hash = newValue;
+    await node.save();
+
+    while(node && node.parent) {
+
+      const nodeIndex = node.key.index;
+      const siblingHash = BigInt(node.siblingHash as string);
+      const nodeHash = BigInt(node.hash);
+
+      const parent = await MerkleTreeNode.findByLevelAndIndex({
+        groupId,
+        level: node.key.level + 1,
+        index: Math.floor(nodeIndex / 2),
+      });
+
+      const childrenHashes = nodeIndex % 2 === 0 ? [nodeHash, siblingHash] : [siblingHash, nodeHash];
+      parent.hash = poseidonHash(childrenHashes).toString();
+
+      await parent.save();
+      node = parent;
+    }
+
   };
 
-  // Not used currently, the users should retreive their witness from InterRep
+
+
   public retrievePath = async (
     groupId: string,
     idCommitment: string
@@ -211,7 +188,7 @@ class MerkleTreeController {
     }
 
     // Get path starting from leaf node.
-    const leafNode = await MerkleTreeNode.findByGroupIdAndHash(
+    const leafNode = await MerkleTreeNode.findLeafByGroupIdAndHash(
       groupId,
       idCommitment
     );
@@ -286,30 +263,16 @@ class MerkleTreeController {
   };
 
   public getNumLeaves = async (groupId: string): Promise<number> => {
-    const numLeaves = await MerkleTreeNode.getNumberOfNodes(groupId, 0);
-    return numLeaves;
-  }
+    const groupExists = await this.groupController.groupExists(groupId);
 
-  public seedZeros = async (zeroValue: BigInt = BigInt(0)) => {
-    const zeroHashes = await MerkleTreeZero.findZeroes();
-
-    const merkleTreeLevels = parseInt(process.env.MERKLE_TREE_LEVELS as string, 10);
-
-    if (!zeroHashes || zeroHashes.length === 0) {
-      for (let level = 0; level < merkleTreeLevels; level++) {
-        zeroValue =
-          level === 0 ? zeroValue : poseidonHash([zeroValue, zeroValue]);
-
-        const zeroHashDocument = await MerkleTreeZero.create({
-          level,
-          hash: zeroValue.toString(),
-        });
-
-        await zeroHashDocument.save();
-      }
+    if (!groupExists) {
+      throw new Error(`The group ${groupId} does not exist`);
     }
 
-  };
+    return await MerkleTreeNode.getNumberOfNodes(groupId, 0);
+
+  }
+
 
 }
 
