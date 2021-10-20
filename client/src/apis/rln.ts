@@ -1,5 +1,5 @@
 import * as path from "path";
-import { NRLN } from "semaphore-lib";
+import { NRln, genExternalNullifier, genSignalHash } from "@libsem/protocols";
 import { RedirectMessage } from "../utils/types";
 import * as bigintConversion from "bigint-conversion";
 import { accessApp } from "../utils/requests"
@@ -22,22 +22,28 @@ const generateRequest = async (
   epoch: string,
   url: string
 ): Promise<RedirectMessage> => {
-  epoch = NRLN.genExternalNullifier(epoch);
-  const fullProof = await NRLN.genProofFromBuiltTree(
-    identitySecret,
-    witness,
-    epoch,
-    url,
+  epoch = genExternalNullifier(epoch);
+  const signalHash = genSignalHash(url)
+
+  const proofInput = {
+    "identity_secret": identitySecret,
+    "path_elements": witness.pathElements,
+    "identity_path_index": witness.indices,
+    "epoch": epoch,
+    "x" : signalHash
+  }
+
+  const fullProof = await NRln.genProof(
+    proofInput,
     CIRCUIT_PATH,
     PROVER_KEY_PATH
   );
 
-  const xShare: bigint = NRLN.genSignalHash(url);
 
-  const [y, nullifier] = NRLN.calculateOutput(
+  const [y, nullifier] = NRln.calculateOutput(
     identitySecret,
-    bigintConversion.hexToBigint(epoch.slice(2)),
-    xShare,
+    BigInt(epoch),
+    signalHash,
     SPAM_THRESHOLD
   );
 

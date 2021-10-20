@@ -6,8 +6,7 @@
   "author": "Blagoj Dimovski",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.17.1",
-    "semaphore-lib": "git+https://github.com/akinovak/semaphore-lib.git#dev"
+    "express": "^4.17.1"
   },
   "devDependencies": {
     "@types/node": "^16.9.4",

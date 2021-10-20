@@ -1,11 +1,10 @@
 import config from "./config";
-import { getWitness, waitForConnection, initState, getState } from "./apis/socket";
+import { waitForConnection, initState, getState } from "./apis/socket";
 import { registerToInterRep, accessApp } from "./utils/requests";
 
 import { sleep } from "./utils/utils";
 import { generateRequest, getEpoch } from "./apis/rln";
-import { NRLN } from "semaphore-lib";
-NRLN.setHasher("poseidon");
+import { ZkIdentity } from "@libsem/identity";
 
 const rlnIdentifier = config.RLN_IDENTIFIER;
 const epoch = getEpoch();
@@ -120,8 +119,8 @@ const userSpam = async (
 };
 
 const main = async () => {
-    const idSecret: bigint[] = NRLN.genIdentitySecrets(config.SPAM_TRESHOLD);
-    const idCommitment: BigInt = NRLN.genIdentityCommitment(idSecret);
+    const idSecret: bigint[] = ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
+    const idCommitment: BigInt = ZkIdentity.genIdentityCommitmentFromSecret(idSecret);
 
     const args = process.argv.slice(2);
     let groupIndex = 0;

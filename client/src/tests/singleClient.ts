@@ -1,20 +1,18 @@
-// Single user
 import config from "../config";
 import { generateRequest } from "../apis/rln";
-import { getWitness, waitForConnection, initState, getState } from "../apis/socket";
-import { NRLN } from "semaphore-lib";
+import {  waitForConnection, initState, getState } from "../apis/socket";
+import { ZkIdentity } from "@libsem/identity";
 import { registerToInterRep, accessApp } from "../utils/requests";
 import { sleep } from "../utils/utils";
 import { exit } from "process";
 
-NRLN.setHasher("poseidon");
 
 const rlnIdentifier = config.RLN_IDENTIFIER;
 const epoch = "test-epoch";
 
 const main = async () => {
-  const identitySecret: bigint[] = NRLN.genIdentitySecrets(config.SPAM_TRESHOLD);
-  const identityCommitment: BigInt = NRLN.genIdentityCommitment(identitySecret);
+  const identitySecret: bigint[] = ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
+  const identityCommitment: BigInt = ZkIdentity.genIdentityCommitmentFromSecret(identitySecret);
 
   initState(config.INTERREP_GROUPS[0], identityCommitment.toString());
 

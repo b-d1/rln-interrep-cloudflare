@@ -1,10 +1,12 @@
+// import { NRLN, IProof } from "semaphore-lib";
+import { NRln, genSignalHash, IProof } from "@libsem/protocols"
 import * as path from "path";
 import * as fs from "fs";
+
 import config from "../config"
 
 import RequestStats from "../models/RequestStats/RequestStats.model";
 
-import { NRLN, IProof } from "semaphore-lib";
 import { RedirectMessage, RedirectVerificationStatus } from "../utils/types";
 
 import { getHostFromUrl } from "../utils/utils";
@@ -27,15 +29,14 @@ class RLNController {
   ) {
     this.merkleTreeController = treeController;
     this.messageController = msgController;
-    NRLN.setHasher("poseidon");
 
     const keyPath = path.join("./circuitFiles/rln", "verification_key.json");
 
     this.verifierKey = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
   }
 
-  public genSignalHash = (signal: string): string => {
-    return NRLN.genSignalHash(signal).toString();
+  public genSignalHashString = (signal: string): string => {
+    return genSignalHash(signal).toString();
   };
 
   public removeUser = async (message: RedirectMessage): Promise<string> => {
@@ -48,13 +49,12 @@ class RLNController {
     const sharesX = requestStats.map((stats) => BigInt(stats.xShare));
     const sharesY = requestStats.map((stats) => BigInt(stats.yShare));
 
-      sharesX.push(NRLN.genSignalHash(message.url));
+      sharesX.push(genSignalHash(message.url));
       sharesY.push(BigInt(message.yShare));
 
-    const pKey = NRLN.retrievePrivateKey(sharesX, sharesY);
+    const secret: bigint = NRln.retrieveSecret(sharesX, sharesY);
 
-
-    const idCommitment = poseidonHash([pKey]).toString();
+    const idCommitment = poseidonHash([secret]).toString();
 
     const treeNode = await MerkleTreeNode.findLeafByGroupIdAndHash(message.groupId, idCommitment);
 
@@ -66,7 +66,7 @@ class RLNController {
     const bannedUser = new BannedUser({
       idCommitment,
       leafIndex: treeNode.key.index,
-      secret: pKey.toString(),
+      secret: secret.toString(),
     });
 
     await bannedUser.save();
@@ -79,7 +79,7 @@ class RLNController {
     if (
       await this.messageController.isDuplicate(
         redirectMessage,
-        this.genSignalHash(redirectMessage.url)
+        this.genSignalHashString(redirectMessage.url)
       )
     )
       return RedirectVerificationStatus.DUPLICATE;
@@ -93,12 +93,12 @@ class RLNController {
         BigInt(redirectMessage.yShare),
         BigInt(root.hash),
         BigInt(redirectMessage.nullifier),
-        NRLN.genSignalHash(redirectMessage.url),
+        genSignalHash(redirectMessage.url),
         redirectMessage.epoch
       ],
     };
 
-    const status = await NRLN.verifyProof(this.verifierKey, proof);
+    const status = await NRln.verifyProof(this.verifierKey, proof);
 
     if (!status) {
       return RedirectVerificationStatus.INVALID;

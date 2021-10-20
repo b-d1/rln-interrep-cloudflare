@@ -27,7 +27,7 @@ router.post("/access", async (req, res) => {
   if (status === RedirectVerificationStatus.VALID) {
     await messageController.registerValidMessage(
       redirectMessage,
-      rlnController.genSignalHash(redirectMessage.url)
+      rlnController.genSignalHashString(redirectMessage.url)
     );
 
     res.redirect(307, `${redirectMessage.url}?key=${app.accessKey}`);

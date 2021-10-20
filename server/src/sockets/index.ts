@@ -13,7 +13,7 @@ const initServer =  async (server: http.Server): Promise<Server> => {
 }
 
 const setSocketListeners = async (server: Server) => {
-    console.log("setting socket listeners...", server)
+    console.log("setting socket listeners...",)
 
     server.on("connection", async (socket: Socket) => {
       console.log("on connection...")

@@ -1,11 +1,4 @@
-# CloudFlare Rate-Limiting like service proof-of-concept implemented using RLN and InterRep (WIP)
-
-### Note:
-
-This repository is work in progress.
-
-TODO items:
-- Improving upon the RLN construct to treat duplicate messages per epoch as spam too 
+# CloudFlare Rate-Limiting like service proof-of-concept implemented using RLN and InterRep
 
 ### Prerequisites
 
@@ -37,7 +30,7 @@ extra (simulate multiple separate clients in real time):
 
 ### Description
 
-This repo contains a PoC application for a CloudFlare-like rate limiting service implemented using the RLN construct and the InterRep linking service. The idea is that users already registered to InterRep (their identity commitment being added to some of the semaphore groups) can access applications protected by the Rate limiting service. If the users are caught spamming, then they will be "banned" from all of the applications protected by the service, by the properties of the RLN protocol. The users will not be be removed from the semaphore groups at the InterRep service, but only at the RLN service.
+This repository contains a PoC application for a CloudFlare-like rate limiting service implemented using the RLN construct and the InterRep linking service. The idea is that users already registered to InterRep (their identity commitment being added to some of the semaphore groups) can access applications protected by the Rate limiting service. If the users are caught spamming, then they will be "banned" from all of the applications protected by the service, by the properties of the RLN protocol. The users will not be be removed from the semaphore groups at the InterRep service, but only at the RLN service.
 
 This is a simple PoC, and much more advanced rate limiting logic can be applied (i.e request limiting and proof generation based on more advanced heuristics), but the purpose of the PoC is how RLN can be applied and used for this kind of applications.
 
@@ -56,3 +49,10 @@ The connected users to the rate limiting service will get notifications via webs
 For more details around the idea, please refer to: https://ethresear.ch/t/decentralised-cloudflare-using-rln-and-rich-user-identities/10774
 
 For the details about InterRep <-> RLN integration and tree syncing, please read the following doc: https://hackmd.io/@aeAuSD7mSCKofwwx445eAQ/SJpo9rwrt.
+
+
+### TODO items and possible improvements:
+
+- Improving upon the RLN construct to treat duplicate messages per epoch as spam too, or using a different signal rather than the url
+- "Smarter" synchronisation protocol, so that the witness is marked as stale on the client side on member addition/removal and a new witness is obtained before the next request is made
+- RLN identifier for each different app. This will allow for more accurate spam detection, right now the request number per epoch is tracked globally and the users might be treated as spammers if they send multiple requests to different apps.

@@ -1,4 +1,6 @@
-import { FastSemaphore } from "semaphore-lib";
+const Tree = require("incrementalquintree/build/IncrementalQuinTree");
+import { ZkIdentity, Identity } from "@libsem/identity";
+import poseidonHash from "./hasher";
 
 const trees = {
   "TWITTER": null,
@@ -10,19 +12,18 @@ const init = () => {
   const depth = 15;
   const leavesPerNode = 2;
   const zeroValue = BigInt(0);
-  FastSemaphore.setHasher("poseidon");
 
-  trees.TWITTER = FastSemaphore.createTree(depth, zeroValue, leavesPerNode);
-  trees.GITHUB = FastSemaphore.createTree(depth, zeroValue, leavesPerNode);
+  trees.TWITTER = new Tree.IncrementalQuinTree(depth, zeroValue, leavesPerNode, poseidonHash);
+  trees.GITHUB = new Tree.IncrementalQuinTree(depth, zeroValue, leavesPerNode, poseidonHash);
   seed(trees.TWITTER);
   seed(trees.GITHUB);
 };
 
-// add few dummy IdCommitments in the tree on init, so we have some data to work with
+// add few dummy IdCommitments in the trees on init, so we have some data to work with
 const seed = (tree) => {
   for (let i = 0; i < 10; i++) {
-    const identity = FastSemaphore.genIdentity();
-    const idCommitment: any = FastSemaphore.genIdentityCommitment(identity);
+    const identity: Identity = ZkIdentity.genIdentity();
+    const idCommitment: any = ZkIdentity.genIdentityCommitment(identity)
     tree.insert(idCommitment);
   }
 };

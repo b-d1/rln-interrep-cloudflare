@@ -1,10 +1,9 @@
 import config from "../config";
 import { generateRequest, getEpoch } from "../apis/rln";
-import { NRLN } from "semaphore-lib";
+import { ZkIdentity } from "@libsem/identity";
 import { registerToInterRep, getWitness, accessApp } from "../utils/requests";
 import { exit } from "process";
 
-NRLN.setHasher("poseidon");
 
 const sleep = async (interval: number = 15 * 1000) => {
   await new Promise((r) => setTimeout(r, interval));
@@ -14,14 +13,14 @@ const rlnIdentifier = config.RLN_IDENTIFIER;
 const epoch = getEpoch();
 
 const simulateInteractions = async () => {
-  const user1idSecret: bigint[] = NRLN.genIdentitySecrets(config.SPAM_TRESHOLD);
-  const user1idCommitment: BigInt = NRLN.genIdentityCommitment(user1idSecret);
+  const user1idSecret: bigint[] = ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
+  const user1idCommitment: BigInt = ZkIdentity.genIdentityCommitmentFromSecret(user1idSecret);
 
-  const user2idSecret: bigint[] = NRLN.genIdentitySecrets(config.SPAM_TRESHOLD);
-  const user2idCommitment: BigInt = NRLN.genIdentityCommitment(user2idSecret);
+  const user2idSecret: bigint[] = ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
+  const user2idCommitment: BigInt = ZkIdentity.genIdentityCommitmentFromSecret(user2idSecret);
 
-  const user3idSecret: bigint[] = NRLN.genIdentitySecrets(config.SPAM_TRESHOLD);
-  const user3idCommitment: BigInt = NRLN.genIdentityCommitment(user3idSecret);
+  const user3idSecret: bigint[] = ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
+  const user3idCommitment: BigInt = ZkIdentity.genIdentityCommitmentFromSecret(user3idSecret);
 
   // register user1 to interrep
   console.log("USER 1: REGISTER...");
