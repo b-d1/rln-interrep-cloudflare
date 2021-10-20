@@ -16,6 +16,7 @@
     "build": "yarn workspaces run build",
     "server": "yarn workspace server start",
     "client": "yarn workspace client start",
+    "singleClient": "yarn workspace client start",
     "multiClient": "yarn workspace client multiClient",
     "user1": "yarn workspace client user1",
     "user2": "yarn workspace client user2",

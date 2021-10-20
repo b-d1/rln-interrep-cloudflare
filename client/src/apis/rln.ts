@@ -1,12 +1,12 @@
+
 import * as path from "path";
 import { NRln, genExternalNullifier, genSignalHash } from "@libsem/protocols";
+
+import config from "../config"
 import { RedirectMessage } from "../utils/types";
-import * as bigintConversion from "bigint-conversion";
-import { accessApp } from "../utils/requests"
 const PROVER_KEY_PATH: string = path.join("./circuitFiles", "rln_final.zkey");
 const CIRCUIT_PATH: string = path.join("./circuitFiles", "rln.wasm");
 
-const SPAM_THRESHOLD = 3;
 
 const getEpoch = () => {
   // For PoC purposes only, in real life apps the epoch will be obtained
@@ -39,12 +39,11 @@ const generateRequest = async (
     PROVER_KEY_PATH
   );
 
-
   const [y, nullifier] = NRln.calculateOutput(
     identitySecret,
     BigInt(epoch),
     signalHash,
-    SPAM_THRESHOLD
+    config.SPAM_TRESHOLD
   );
 
   const request: RedirectMessage = {

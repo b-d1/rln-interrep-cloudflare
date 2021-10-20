@@ -18,7 +18,7 @@ Then run the apps:
 1. `yarn interrepMock`
 2. `yarn server`
 3. `yarn appExample`
-4. `yarn client` # single client simulation
+4. `yarn singleClient` # single client simulation
 5. `yarn multiClient` # multi client simulation
 
 extra (simulate multiple separate clients in real time):
@@ -50,6 +50,7 @@ For more details around the idea, please refer to: https://ethresear.ch/t/decent
 
 For the details about InterRep <-> RLN integration and tree syncing, please read the following doc: https://hackmd.io/@aeAuSD7mSCKofwwx445eAQ/SJpo9rwrt.
 
+For a server implementation that synchronises the membership tree from an InterRep subgraph, please check the `interrep_integration` branch.
 
 ### TODO items and possible improvements:
 

@@ -1,14 +1,22 @@
 import config from "../config"
-import Group from "../models/group/Group.model";
 import {
   MerkleTreeNode,
   MerkleTreeZero,
 } from "../models/MerkleTree/MerkleTree.model";
+import GroupController from "./GroupController";
 import { IMerkleTreeNodeDocument } from "../models/MerkleTree/MerkleTree.types";
 import poseidonHash from "../utils/hasher";
 
 
 class MerkleTreeController {
+
+  groupController: GroupController;
+
+  constructor(
+    groupController: GroupController,
+  ) {
+    this.groupController = groupController;
+  }
 
   public syncTree = async (
     groupId: string,
@@ -33,7 +41,9 @@ class MerkleTreeController {
     idCommitment: string,
     isUpdate: boolean = false
   ): Promise<string> => {
-    if (!(await Group.findOne({ groupId }))) {
+    const groupExists = await this.groupController.groupExists(groupId);
+
+    if (!groupExists) {
       throw new Error(`The group ${groupId} does not exist`);
     }
 
@@ -173,7 +183,9 @@ class MerkleTreeController {
     groupId: string,
     idCommitment: string
   ): Promise<any> => {
-    if (!( await Group.findOne({ groupId }))) {
+    const groupExists = await this.groupController.groupExists(groupId);
+
+    if (!groupExists) {
       throw new Error(`The group ${groupId} does not exist`);
     }
 

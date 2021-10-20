@@ -6,7 +6,7 @@ export default {
     DB_CONNECTION_STRING: process.env.DB_CONNECTION_STRING || "",
     SERVER_PORT: parseInt((process.env.SERVER_PORT || "8080"), 10),
     MERKLE_TREE_LEVELS: parseInt(process.env.MERKLE_TREE_LEVELS || "15", 10),
-    SPAM_TRESHOLD: parseInt(process.env.SPAM_THRESHOLD || "3", 10),
+    SPAM_TRESHOLD: parseInt(process.env.SPAM_TRESHOLD || "3", 10),
     INTERREP_SYNC_INTERVAL_SECONDS: parseInt(process.env.INTERREP_SYNC_INTERVAL_SECONDS || "10", 10),
     ZERO_VALUE: BigInt(0),
     INTERREP_GROUPS: process.env.INTERREP_GROUPS?.split(",") || ["TWITTER", "GITHUB"]
