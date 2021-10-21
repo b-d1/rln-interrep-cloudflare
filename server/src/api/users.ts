@@ -20,14 +20,23 @@ router.post("/access", async (req, res) => {
     return;
   }
 
+  const validEpoch = rlnController.verifyEpoch(redirectMessage)
+
+  if (!validEpoch) {
+    res.status(400).json({ error: "Invalid epoch" });
+    return;
+  }
+
   const status: RedirectVerificationStatus = await rlnController.verifyRlnProof(
     redirectMessage
   );
 
+  console.log("redirect message status", status);
+
   if (status === RedirectVerificationStatus.VALID) {
     await messageController.registerValidMessage(
       redirectMessage,
-      rlnController.genSignalHashString(redirectMessage.url)
+      rlnController.genSignalHashString(redirectMessage.signal)
     );
 
     res.redirect(307, `${redirectMessage.url}?key=${app.accessKey}`);

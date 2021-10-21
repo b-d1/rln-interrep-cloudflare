@@ -7,7 +7,6 @@ const APP_BASE_URL = `http://localhost:${APP_PORT}`;
 const APP_NAME = "EXAMPLE_APP";
 
 const RATE_LIMIT_SERVER_BASE_URL = "http://localhost:8080";
-const RATE_LIMIT_SERVER_HOST = new URL(RATE_LIMIT_SERVER_BASE_URL).host;
 
 // ACCESS_KEY is used just for demo purposes, more sophisticated implementation to be done`
 const ACCESS_KEY = "1234";

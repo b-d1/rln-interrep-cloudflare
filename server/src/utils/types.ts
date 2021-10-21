@@ -15,7 +15,8 @@ enum RedirectVerificationStatus {
 interface RedirectMessage {
   proof: string; // RLN proof
   nullifier: string;
-  url: string; // the url is the signal
+  url: string;
+  signal: string; // the signal is always a different random string
   epoch: string;
   groupId: string; // InterRep group id
   yShare: string; // the xShare is the hash of the content, so we don't need to send that

@@ -1,5 +1,5 @@
 // import { NRLN, IProof } from "semaphore-lib";
-import { NRln, genSignalHash, IProof } from "@libsem/protocols"
+import { NRln, genSignalHash, genExternalNullifier, IProof } from "@libsem/protocols"
 import * as path from "path";
 import * as fs from "fs";
 
@@ -9,7 +9,7 @@ import RequestStats from "../models/RequestStats/RequestStats.model";
 
 import { RedirectMessage, RedirectVerificationStatus } from "../utils/types";
 
-import { getHostFromUrl } from "../utils/utils";
+import { getHostFromUrl, getEpoch } from "../utils/utils";
 import BannedUser from "../models/BannedUser/BannedUser.model";
 
 import MerkleTreeController from "./MerkleTreeController";
@@ -35,6 +35,52 @@ class RLNController {
     this.verifierKey = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
   }
 
+  public verifyRlnProof = async (
+    redirectMessage: RedirectMessage
+  ): Promise<RedirectVerificationStatus> => {
+    if (
+      await this.messageController.isDuplicate(
+        redirectMessage,
+        this.genSignalHashString(redirectMessage.signal)
+      )
+    )
+      return RedirectVerificationStatus.DUPLICATE;
+
+    const root = await MerkleTreeNode.findRoot(redirectMessage.groupId);
+    if (!root) return RedirectVerificationStatus.INVALID;
+
+    const proof: IProof = {
+      proof: redirectMessage.proof,
+      publicSignals: [
+        BigInt(redirectMessage.yShare),
+        BigInt(root.hash),
+        BigInt(redirectMessage.nullifier),
+        genSignalHash(redirectMessage.signal),
+        redirectMessage.epoch,
+        BigInt(redirectMessage.rlnIdentifier)
+      ],
+    };
+
+    const status = await NRln.verifyProof(this.verifierKey, proof);
+
+    if (!status) {
+      return RedirectVerificationStatus.INVALID;
+    }
+
+    if (
+      await this.messageController.isSpam(redirectMessage, config.SPAM_TRESHOLD)
+    ) {
+      return RedirectVerificationStatus.SPAM;
+    }
+
+    return RedirectVerificationStatus.VALID;
+  };
+
+  public verifyEpoch = (redirectMessage: RedirectMessage): boolean => {
+    const generatedEpoch = getEpoch(redirectMessage.url);
+    return genExternalNullifier(generatedEpoch) === redirectMessage.epoch
+  }
+
   public genSignalHashString = (signal: string): string => {
     return genSignalHash(signal).toString();
   };
@@ -49,7 +95,7 @@ class RLNController {
     const sharesX = requestStats.map((stats) => BigInt(stats.xShare));
     const sharesY = requestStats.map((stats) => BigInt(stats.yShare));
 
-      sharesX.push(genSignalHash(message.url));
+      sharesX.push(genSignalHash(message.signal));
       sharesY.push(BigInt(message.yShare));
 
     const secret: bigint = NRln.retrieveSecret(sharesX, sharesY);
@@ -73,45 +119,9 @@ class RLNController {
     return idCommitment
   };
 
-  public verifyRlnProof = async (
-    redirectMessage: RedirectMessage
-  ): Promise<RedirectVerificationStatus> => {
-    if (
-      await this.messageController.isDuplicate(
-        redirectMessage,
-        this.genSignalHashString(redirectMessage.url)
-      )
-    )
-      return RedirectVerificationStatus.DUPLICATE;
 
-    const root = await MerkleTreeNode.findRoot(redirectMessage.groupId);
-    if (!root) return RedirectVerificationStatus.INVALID;
-
-    const proof: IProof = {
-      proof: redirectMessage.proof,
-      publicSignals: [
-        BigInt(redirectMessage.yShare),
-        BigInt(root.hash),
-        BigInt(redirectMessage.nullifier),
-        genSignalHash(redirectMessage.url),
-        redirectMessage.epoch
-      ],
-    };
-
-    const status = await NRln.verifyProof(this.verifierKey, proof);
-
-    if (!status) {
-      return RedirectVerificationStatus.INVALID;
-    }
-
-    if (
-      await this.messageController.isSpam(redirectMessage, config.SPAM_TRESHOLD)
-    ) {
-      return RedirectVerificationStatus.SPAM;
-    }
-
-    return RedirectVerificationStatus.VALID;
-  };
 }
+
+
 
 export default RLNController;

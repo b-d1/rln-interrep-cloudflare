@@ -1,26 +1,36 @@
 import config from "../config";
-import { generateRequest, getEpoch } from "../apis/rln";
+import { generateRequest } from "../apis/rln";
 import { ZkIdentity } from "@libsem/identity";
-import { registerToInterRep, getWitness, accessApp } from "../utils/requests";
+import { registerToInterRep, getWitness, accessApp, getRlnIdentifierForApp } from "../utils/requests";
 import { exit } from "process";
-
 
 const sleep = async (interval: number = 15 * 1000) => {
   await new Promise((r) => setTimeout(r, interval));
 };
 
-const rlnIdentifier = config.RLN_IDENTIFIER;
-const epoch = getEpoch();
+const appName = config.APP_NAME;
 
 const simulateInteractions = async () => {
-  const user1idSecret: bigint[] = ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
-  const user1idCommitment: BigInt = ZkIdentity.genIdentityCommitmentFromSecret(user1idSecret);
 
-  const user2idSecret: bigint[] = ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
-  const user2idCommitment: BigInt = ZkIdentity.genIdentityCommitmentFromSecret(user2idSecret);
+  const rlnIdentifier = await getRlnIdentifierForApp(appName);
 
-  const user3idSecret: bigint[] = ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
-  const user3idCommitment: BigInt = ZkIdentity.genIdentityCommitmentFromSecret(user3idSecret);
+  const user1idSecret: bigint[] = ZkIdentity.genRandomSecret(
+    config.SPAM_TRESHOLD
+  );
+  const user1idCommitment: BigInt =
+    ZkIdentity.genIdentityCommitmentFromSecret(user1idSecret);
+
+  const user2idSecret: bigint[] = ZkIdentity.genRandomSecret(
+    config.SPAM_TRESHOLD
+  );
+  const user2idCommitment: BigInt =
+    ZkIdentity.genIdentityCommitmentFromSecret(user2idSecret);
+
+  const user3idSecret: bigint[] = ZkIdentity.genRandomSecret(
+    config.SPAM_TRESHOLD
+  );
+  const user3idCommitment: BigInt =
+    ZkIdentity.genIdentityCommitmentFromSecret(user3idSecret);
 
   // register user1 to interrep
   console.log("USER 1: REGISTER...");
@@ -41,7 +51,7 @@ const simulateInteractions = async () => {
 
   // spam user 1
   console.log("USER 1: SPAM...");
-  await simulateSpam(user1idSecret, user1witness, config.INTERREP_GROUPS[0]);
+  await simulateSpam(user1idSecret, user1witness, config.INTERREP_GROUPS[0], rlnIdentifier);
 
   // register user2 to interrep
   console.log("USER 2: REGISTER...");
@@ -67,7 +77,6 @@ const simulateInteractions = async () => {
     user2witness,
     rlnIdentifier,
     config.INTERREP_GROUPS[0],
-    epoch,
     `${config.APP_BASE_URL}/hello`
   );
   let result = await accessApp(request);
@@ -91,14 +100,13 @@ const simulateInteractions = async () => {
     user3idCommitment.toString()
   );
 
-  // perform an invalid request from user 2 (old witness)
+  // perform a valid request from user 2
   console.log("USER 2: REQUEST...");
   request = await generateRequest(
     user2idSecret,
     user2witness,
     rlnIdentifier,
     config.INTERREP_GROUPS[0],
-    epoch,
     `${config.APP_BASE_URL}/hi1`
   );
   result = await accessApp(request);
@@ -113,7 +121,7 @@ const simulateInteractions = async () => {
 
   // spam user 3
   console.log("USER 3: SPAM...");
-  await simulateSpam(user3idSecret, user3witness, config.INTERREP_GROUPS[1]);
+  await simulateSpam(user3idSecret, user3witness, config.INTERREP_GROUPS[1], rlnIdentifier);
 
   // perform a valid request from user 2
   console.log("USER 2: REQUEST...");
@@ -122,7 +130,6 @@ const simulateInteractions = async () => {
     user2witness,
     rlnIdentifier,
     config.INTERREP_GROUPS[0],
-    epoch,
     `${config.APP_BASE_URL}/hi2`
   );
   result = await accessApp(request);
@@ -134,7 +141,8 @@ const simulateInteractions = async () => {
 const simulateSpam = async (
   identitySecret: bigint[],
   witness: string,
-  groupId: string
+  groupId: string,
+  rlnIdentifier: bigint
 ) => {
   // request 1
   let request = await generateRequest(
@@ -142,19 +150,17 @@ const simulateSpam = async (
     witness,
     rlnIdentifier,
     groupId,
-    epoch,
     `${config.APP_BASE_URL}/hello`
   );
   let result = await accessApp(request);
   console.log(result);
 
   // request 2 (ok)
-  result = await generateRequest(
+  request = await generateRequest(
     identitySecret,
     witness,
     rlnIdentifier,
     groupId,
-    epoch,
     `${config.APP_BASE_URL}/hi`
   );
   result = await accessApp(request);
@@ -166,32 +172,40 @@ const simulateSpam = async (
     witness,
     rlnIdentifier,
     groupId,
-    epoch,
-    `${config.APP_BASE_URL}/hi1`
+    `${config.APP_BASE_URL}/hello`
   );
   result = await accessApp(request);
   console.log(result);
 
-  // request 4 (spam)
+  // request 4 (ok)
   request = await generateRequest(
     identitySecret,
     witness,
     rlnIdentifier,
     groupId,
-    epoch,
+    `${config.APP_BASE_URL}/hello`
+  );
+  result = await accessApp(request);
+  console.log(result);
+
+  // request 5 (spam)
+  request = await generateRequest(
+    identitySecret,
+    witness,
+    rlnIdentifier,
+    groupId,
+    `${config.APP_BASE_URL}/hello`
+  );
+  result = await accessApp(request);
+  console.log(result);
+
+  // request 6 (invalid)
+  request = await generateRequest(
+    identitySecret,
+    witness,
+    rlnIdentifier,
+    groupId,
     `${config.APP_BASE_URL}/hi2`
-  );
-  result = await accessApp(request);
-  console.log(result);
-
-  // request 5 (invalid)
-  request = await generateRequest(
-    identitySecret,
-    witness,
-    rlnIdentifier,
-    groupId,
-    epoch,
-    `${config.APP_BASE_URL}/hi3`
   );
   result = await accessApp(request);
   console.log(result);

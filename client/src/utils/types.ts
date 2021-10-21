@@ -15,11 +15,11 @@ enum RedirectVerificationStatus {
 interface RedirectMessage {
   proof: string; // RLN proof
   nullifier: string;
-  url: string; // the url is the signal
-  epoch: string;
+  url: string;
+  signal: string; // the signal is always a different random string
+  epoch: string; // generated from a timestamp and the url
   groupId: string; // InterRep group id
   yShare: string; // the xShare is the hash of the content, so we don't need to send that
   rlnIdentifier: string;
 }
-
 export { RedirectMessage, RedirectVerificationStatus, SocketEventType };

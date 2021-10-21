@@ -7,6 +7,7 @@ const AppSchemaFields: Record<keyof IApp, any> = {
   url: { type: String, required: true, unique: true },
   host: { type: String, index: true },
   accessKey: { type: String, required: true },
+  rlnIdentifier: {type: String, required: true, unique: true}
 };
 
 const AppSchema = new Schema<IAppDocument, IAppModel>(AppSchemaFields);

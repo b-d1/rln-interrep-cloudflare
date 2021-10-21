@@ -15,6 +15,7 @@ class MessageController {
       nullifier: message.nullifier,
       xShare: signalHash,
       yShare: message.yShare,
+      rlnIdentifier: message.rlnIdentifier
     });
 
     await requestStats.save();
@@ -25,7 +26,7 @@ class MessageController {
     signalHash: string
   ): Promise<boolean> => {
     return await RequestStats.isDuplicateRequest(
-      getHostFromUrl(redirectMessage.url),
+      redirectMessage.rlnIdentifier,
       redirectMessage.epoch,
       redirectMessage.nullifier,
       signalHash,
@@ -35,15 +36,13 @@ class MessageController {
 
   /**
    * Function called after the duplicate message check and proof verification.
-   * We just need to check if there are more shares than the `SPAM_THRESHOLD` sent by the user in the same epoch, if yes then we can
-   * consider this as a spam, because the message was not duplicate and also the proof was valid.
    */
   public isSpam = async (
     redirectMessage: RedirectMessage,
     spamThreshold: number
   ): Promise<boolean> => {
     return await RequestStats.isSpamRequest(
-      getHostFromUrl(redirectMessage.url),
+      redirectMessage.rlnIdentifier,
       redirectMessage.epoch,
       redirectMessage.nullifier,
       spamThreshold

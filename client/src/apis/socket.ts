@@ -21,7 +21,7 @@ const initState = (groupId: string, idCommitment: string) => {
 };
 
 const waitForConnection = (): Promise<boolean> => {
-  console.log("waiting for connection...")
+  console.log("waiting for connection...");
   return new Promise((resolve) => {
     socket.on("connect", () => {
       state.connected = true;
@@ -40,26 +40,28 @@ socket.on(SocketEventType.USER_REGISTERED, async (groupId: string) => {
     try {
       const witness = await getWitness();
       state.witness = witness;
-    } catch(e) {
-      console.log("Error while obtaining witness, exiting!", e);
-      process.exit(1);
-    }
-
-  }
-});
-
-socket.on(SocketEventType.USER_SLASHED, async (groupId: string, idCommitment: string) => {
-  console.log("user was slashed, groupId:", groupId);
-  if (groupId === state.groupId && idCommitment !== state.idCommitment) {
-    try {
-      const witness = await getWitness();
-      state.witness = witness;
-    } catch(e) {
+    } catch (e) {
       console.log("Error while obtaining witness, exiting!", e);
       process.exit(1);
     }
   }
 });
+
+socket.on(
+  SocketEventType.USER_SLASHED,
+  async (groupId: string, idCommitment: string) => {
+    console.log("user was slashed, groupId:", groupId);
+    if (groupId === state.groupId && idCommitment !== state.idCommitment) {
+      try {
+        const witness = await getWitness();
+        state.witness = witness;
+      } catch (e) {
+        console.log("Error while obtaining witness, exiting!", e);
+        process.exit(1);
+      }
+    }
+  }
+);
 
 const getWitness = async (): Promise<{}> => {
   return new Promise((resolve, reject) => {
@@ -81,6 +83,6 @@ const getWitness = async (): Promise<{}> => {
 
 const getState = () => {
   return state;
-}
+};
 
 export { waitForConnection, getWitness, initState, getState };

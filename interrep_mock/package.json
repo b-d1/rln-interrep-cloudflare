@@ -7,8 +7,8 @@
   "license": "MIT",
   "dependencies": {
     "express": "^4.17.1",
-    "@libsem/identity": "^1.0.9",
-    "@libsem/protocols": "^1.0.10",
+    "@libsem/identity": "^1.0.10",
+    "@libsem/protocols": "^1.0.12",
     "incrementalquintree": "^1.0.7"
   },
   "devDependencies": {

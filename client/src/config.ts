@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 export default {
@@ -17,5 +17,5 @@ export default {
     "TWITTER",
     "GITHUB",
   ],
-  RLN_IDENTIFIER: BigInt(5),
+  APP_NAME: process.env.APP_NAME || "EXAMPLE_APP"
 };

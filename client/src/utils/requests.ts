@@ -30,4 +30,12 @@ const accessApp = async (request: RedirectMessage) => {
   return res.data;
 };
 
-export { registerToInterRep, getWitness, accessApp };
+const getRlnIdentifierForApp = async (appName: string): Promise<bigint> => {
+  const res = await axios.get(
+    `${config.RATE_LIMITING_SERVICE_BASE_URL}/apps/${appName}`
+      );
+  const appData = res.data;
+  return BigInt(appData.rlnIdentifier);
+};
+
+export { registerToInterRep, getWitness, accessApp, getRlnIdentifierForApp };

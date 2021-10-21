@@ -6,6 +6,7 @@ export interface IApp {
   host: string;
   url: string;
   accessKey: string;
+  rlnIdentifier: string;
 }
 
 export interface IAppDocument extends IApp, Document {}

@@ -1,3 +1,6 @@
+import * as crypto from "crypto"
+import * as bigintConversion from "bigint-conversion"
+
 const serializeWitness = (witness) => {
   const serialized = {
     ...witness,
@@ -23,4 +26,16 @@ const getHostFromUrl = (url: string) => {
   return new URL(url).host;
 };
 
-export { serializeWitness, deserializeWitness, getHostFromUrl };
+const getEpoch = (url: string) => {
+
+  // The epoch is generated from the request url and a timestamp, determined in a known way for the client and the server
+  //
+  const timestamp = "1234";
+  return `${url}--${timestamp}`
+};
+
+const getRandomRlnIdentifier = (): bigint => {
+  return bigintConversion.bufToBigint(crypto.randomBytes(31))
+}
+
+export { serializeWitness, deserializeWitness, getHostFromUrl, getEpoch, getRandomRlnIdentifier };

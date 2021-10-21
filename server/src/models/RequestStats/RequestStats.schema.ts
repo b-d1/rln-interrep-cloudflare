@@ -16,6 +16,7 @@ const RequestStatsSchemaField: Record<keyof IRequestStats, any> = {
   epoch: String,
   xShare: String,
   yShare: String,
+  rlnIdentifier: String
 };
 
 const RequestStatsSchema = new Schema<

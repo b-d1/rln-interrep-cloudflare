@@ -46,14 +46,15 @@ The rate limiting service keeps it's own merkle tree, which contains all of the 
 
 The connected users to the rate limiting service will get notifications via websockets (SocketIO) when a new user is registered to their group or a user is slashed. The clients can use these notifications to obtain a new witness from the RL service, in order to be able to generate valid proofs.
 
-For more details around the idea, please refer to: https://ethresear.ch/t/decentralised-cloudflare-using-rln-and-rich-user-identities/10774
+For more details about the idea, please refer to: https://ethresear.ch/t/decentralised-cloudflare-using-rln-and-rich-user-identities/10774
 
 For the details about InterRep <-> RLN integration and tree syncing, please read the following doc: https://hackmd.io/@aeAuSD7mSCKofwwx445eAQ/SJpo9rwrt.
 
 For a server implementation that synchronises the membership tree from an InterRep subgraph, please check the `interrep_integration` branch.
 
-### TODO items and possible improvements:
+### RLN Construct variables and usage
 
-- Improving upon the RLN construct to treat duplicate messages per epoch as spam too, or using a different signal rather than the url
-- "Smarter" synchronisation protocol, so that the witness is marked as stale on the client side on member addition/removal and a new witness is obtained before the next request is made
-- RLN identifier for each different app. This will allow for more accurate spam detection, right now the request number per epoch is tracked globally and the users might be treated as spammers if they send multiple requests to different apps.
+- `spam_threshold` - the spam threshold is set to 3. The circuits (NRln) are built with `limit=3`, polynomial of degree 2 is used.
+- `epoch` - string concatenation of the website url and a random timestamp. This allows the spam filtering to be more granular - for url, per time interval. The users will be slashed if they send more than `spam_threshold` requests per time interval, at a given url.
+- `signal` - random string, used as an request `id`. Must be different for every request, otherwise the requests would be rejected
+- `rln_identifier` - random identifier, different for each application.

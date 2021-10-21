@@ -1,6 +1,6 @@
 import express from "express";
 import App from "../models/App/App.model";
-import RequestStats from "../models/RequestStats/RequestStats.model";
+import {getRandomRlnIdentifier} from "../utils/utils"
 const router = express.Router();
 
 // List all registered apps
@@ -33,21 +33,19 @@ router.post("/register", async (req, res) => {
   if (appExists) {
     res.status(400).json({ error: "The app already exists" });
   } else {
+
+    // The rlnIdentifier should be unique for each app
+    const rlnIdentifier = (getRandomRlnIdentifier()).toString()
+
     const app = await App.create({
       name,
       host,
       url,
-      accessKey
+      accessKey,
+      rlnIdentifier
     });
 
     await app.save();
-
-    const requestStats = await RequestStats.create({
-      app,
-      epochs: [],
-    });
-
-    await requestStats.save();
 
     res.json(app);
   }

@@ -37,14 +37,14 @@ export async function findByApp(
 
 export async function isDuplicateRequest(
   this: typeof RequestStats,
-  host: string,
+  rlnIdentifier: string,
   epoch: string,
   nullifier: string,
   xShare: string,
   yShare: string
 ): Promise<boolean> {
   const request = await this.findOne({
-    appHost: host,
+    rlnIdentifier,
     epoch,
     nullifier,
     xShare,
@@ -55,7 +55,7 @@ export async function isDuplicateRequest(
 
 export async function isSpamRequest(
   this: typeof RequestStats,
-  host: string,
+  rlnIdentifier: string,
   epoch: string,
   nullifier: string,
   numRequests: number
@@ -63,7 +63,7 @@ export async function isSpamRequest(
   const requests = await this.aggregate([
     {
       $match: {
-        appHost: host,
+        rlnIdentifier,
         epoch,
         nullifier,
       },
