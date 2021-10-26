@@ -1,7 +1,7 @@
 import express from "express";
 import App from "../models/App/App.model";
-import {getRandomRlnIdentifier} from "../utils/utils"
 const router = express.Router();
+import { NRln } from "@libsem/protocols"
 
 // List all registered apps
 router.get("/", async (req, res) => {
@@ -35,7 +35,7 @@ router.post("/register", async (req, res) => {
   } else {
 
     // The rlnIdentifier should be unique for each app
-    const rlnIdentifier = (getRandomRlnIdentifier()).toString()
+    const rlnIdentifier = (NRln.genIdentifier()).toString()
 
     const app = await App.create({
       name,

@@ -1,5 +1,5 @@
 import * as path from "path";
-import { NRln, genExternalNullifier, genSignalHash } from "@libsem/protocols";
+import { NRln, genExternalNullifier, genSignalHash, FullProof } from "@libsem/protocols";
 
 import config from "../config";
 import { RedirectMessage } from "../utils/types";
@@ -38,11 +38,9 @@ const generateRequest = async (
     rln_identifier: rlnIdentifier
   };
 
-  const fullProof = await NRln.genProof(
-    proofInput,
-    CIRCUIT_PATH,
-    PROVER_KEY_PATH
-  );
+  const proofWitness: FullProof = NRln.genWitness(identitySecret, witness, epoch, signal, rlnIdentifier)
+
+  const fullProof: FullProof = await NRln.genProof(proofWitness, CIRCUIT_PATH, PROVER_KEY_PATH)
 
   const [y, nullifier] = NRln.calculateOutput(
     identitySecret,

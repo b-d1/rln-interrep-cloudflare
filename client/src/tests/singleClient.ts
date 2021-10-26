@@ -14,11 +14,10 @@ const main = async () => {
 
   const rlnIdentifier = await getRlnIdentifierForApp(appName);
 
-  const identitySecret: bigint[] = ZkIdentity.genRandomSecret(
-    config.SPAM_TRESHOLD
-  );
-  const identityCommitment: BigInt =
-    ZkIdentity.genIdentityCommitmentFromSecret(identitySecret);
+  const zkIdentity: ZkIdentity = new ZkIdentity();
+  zkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
+  const identitySecret: bigint[] = zkIdentity.getSecret();
+  const identityCommitment: BigInt = zkIdentity.genIdentityCommitmentFromSecret();
 
   initState(config.INTERREP_GROUPS[0], identityCommitment.toString());
 

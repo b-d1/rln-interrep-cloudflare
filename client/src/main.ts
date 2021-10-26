@@ -110,9 +110,10 @@ const userSpam = async (
 };
 
 const main = async () => {
-  const idSecret: bigint[] = ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
-  const idCommitment: BigInt =
-    ZkIdentity.genIdentityCommitmentFromSecret(idSecret);
+  const zkIdentity: ZkIdentity = new ZkIdentity();
+  zkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
+  const idSecret: bigint[] = zkIdentity.getSecret();
+  const idCommitment: BigInt = zkIdentity.genIdentityCommitmentFromSecret();
 
   const args = process.argv.slice(2);
   let groupIndex = 0;

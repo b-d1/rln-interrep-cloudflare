@@ -1,5 +1,5 @@
 const Tree = require("incrementalquintree/build/IncrementalQuinTree");
-import { ZkIdentity, Identity } from "@libsem/identity";
+import { ZkIdentity } from "@libsem/identity";
 import poseidonHash from "./hasher";
 
 const trees = {
@@ -22,8 +22,8 @@ const init = () => {
 // add few dummy IdCommitments in the trees on init, so we have some data to work with
 const seed = (tree) => {
   for (let i = 0; i < 10; i++) {
-    const identity: Identity = ZkIdentity.genIdentity();
-    const idCommitment: any = ZkIdentity.genIdentityCommitment(identity)
+    const identity: ZkIdentity = new ZkIdentity();
+    const idCommitment: any = identity.genIdentityCommitment()
     tree.insert(idCommitment);
   }
 };

@@ -9,8 +9,8 @@
     "socket.io-client": "^4.2.0",
     "axios": "^0.21.4",
     "dotenv": "^10.0.0",
-    "@libsem/identity": "^1.0.10",
-    "@libsem/protocols": "^1.0.12"
+    "@libsem/identity": "^1.0.17",
+    "@libsem/protocols": "^1.0.21"
   },
   "devDependencies": {
     "@types/node": "^16.9.4",

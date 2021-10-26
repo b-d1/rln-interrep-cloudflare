@@ -14,23 +14,21 @@ const simulateInteractions = async () => {
 
   const rlnIdentifier = await getRlnIdentifierForApp(appName);
 
-  const user1idSecret: bigint[] = ZkIdentity.genRandomSecret(
-    config.SPAM_TRESHOLD
-  );
-  const user1idCommitment: BigInt =
-    ZkIdentity.genIdentityCommitmentFromSecret(user1idSecret);
+  const user1ZkIdentity: ZkIdentity = new ZkIdentity();
+  user1ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
+  const user1idSecret: bigint[] = user1ZkIdentity.getSecret();
+  const user1idCommitment: BigInt = user1ZkIdentity.genIdentityCommitmentFromSecret();
 
-  const user2idSecret: bigint[] = ZkIdentity.genRandomSecret(
-    config.SPAM_TRESHOLD
-  );
-  const user2idCommitment: BigInt =
-    ZkIdentity.genIdentityCommitmentFromSecret(user2idSecret);
+  const user2ZkIdentity: ZkIdentity = new ZkIdentity();
+  user2ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
+  const user2idSecret: bigint[] = user2ZkIdentity.getSecret();
+  const user2idCommitment: BigInt = user2ZkIdentity.genIdentityCommitmentFromSecret();
 
-  const user3idSecret: bigint[] = ZkIdentity.genRandomSecret(
-    config.SPAM_TRESHOLD
-  );
-  const user3idCommitment: BigInt =
-    ZkIdentity.genIdentityCommitmentFromSecret(user3idSecret);
+  const user3ZkIdentity: ZkIdentity = new ZkIdentity();
+  user3ZkIdentity.genRandomSecret(config.SPAM_TRESHOLD);
+  const user3idSecret: bigint[] = user3ZkIdentity.getSecret();
+  const user3idCommitment: BigInt = user3ZkIdentity.genIdentityCommitmentFromSecret();
+
 
   // register user1 to interrep
   console.log("USER 1: REGISTER...");

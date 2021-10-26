@@ -34,8 +34,5 @@ const getEpoch = (url: string) => {
   return `${url}--${timestamp}`
 };
 
-const getRandomRlnIdentifier = (): bigint => {
-  return bigintConversion.bufToBigint(crypto.randomBytes(31))
-}
 
-export { serializeWitness, deserializeWitness, getHostFromUrl, getEpoch, getRandomRlnIdentifier };
+export { serializeWitness, deserializeWitness, getHostFromUrl, getEpoch };

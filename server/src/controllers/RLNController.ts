@@ -1,5 +1,4 @@
-// import { NRLN, IProof } from "semaphore-lib";
-import { NRln, genSignalHash, genExternalNullifier, IProof } from "@libsem/protocols"
+import { NRln, genSignalHash, genExternalNullifier, FullProof } from "@libsem/protocols"
 import * as path from "path";
 import * as fs from "fs";
 
@@ -49,7 +48,7 @@ class RLNController {
     const root = await MerkleTreeNode.findRoot(redirectMessage.groupId);
     if (!root) return RedirectVerificationStatus.INVALID;
 
-    const proof: IProof = {
+    const proof: FullProof = {
       proof: redirectMessage.proof,
       publicSignals: [
         BigInt(redirectMessage.yShare),
