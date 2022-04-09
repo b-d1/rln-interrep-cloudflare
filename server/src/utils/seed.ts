@@ -1,4 +1,4 @@
-import Group from "../models/group/Group.model";
+import Group from "../models/Group/Group.model";
 import config from "../config"
 import {
   MerkleTreeZero,
