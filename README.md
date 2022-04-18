@@ -58,3 +58,6 @@ For a server implementation that synchronises the membership tree from an InterR
 - `epoch` - string concatenation of the website url and a random timestamp. This allows the spam filtering to be more granular - for url, per time interval. The users will be slashed if they send more than `spam_threshold` requests per time interval, at a given url.
 - `signal` - random string, used as an request `id`. Must be different for every request, otherwise the requests would be rejected
 - `rln_identifier` - random identifier, different for each application.
+
+Extra:
+More about RLN: https://docs.google.com/presentation/d/1qkBetwCtBwPeK8VHVgit14cq1EWhJ04vM6ldTl6hpD0/edit?usp=sharing
