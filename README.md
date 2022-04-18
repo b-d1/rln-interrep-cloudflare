@@ -61,3 +61,5 @@ For a server implementation that synchronises the membership tree from an InterR
 
 Extra:
 More about RLN: https://docs.google.com/presentation/d/1qkBetwCtBwPeK8VHVgit14cq1EWhJ04vM6ldTl6hpD0/edit?usp=sharing
+
+ZK-Keeper: https://drive.google.com/file/d/1SvvroofrvUWlDq2aSuKJsARiGdZVvJue/view?usp=sharing
